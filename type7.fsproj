@@ -81,6 +81,7 @@
   <ItemGroup>
     <Folder Include="test\" />
     <Folder Include="sample\" />
+    <Folder Include="download\" />
   </ItemGroup>
   <ItemGroup>
     <None Include="readme.md">
@@ -785,6 +786,9 @@
     <None Include="sample\shoot.lll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Include="download\type7.tar.gz" />
+    <None Include="history.md" />
+    <None Include="todo.md" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="test\test_chars\test_0001.lll">
