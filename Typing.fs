@@ -22,10 +22,6 @@ exception TypeError of P * string
  * @return E
  *)
 let autoCastBinT(e: E, a1: E, b1: E): E =
-    printfn("autoCastBinT")
-    printfn "e=%A" e
-    printfn "a1=%A" a1
-    printfn "b1=%A" b1
     
     let rec implicitConversion(a: E, b: E): (E * E) =
         match (a.t, b.t) with
@@ -45,7 +41,6 @@ let autoCastBinT(e: E, a1: E, b1: E): E =
         | _ -> (a, b)
 
     let (a, b) = implicitConversion(a1, b1)
-    printfn "a=%A b=%A" a b
     let e2 =
         match (e, a.t, b.t) with
         | (EBin(p,t,ta,op,_,_), t1, t2) when (t1 = t2) -> EBin(p, t1, ta, op, a, b)
@@ -57,7 +52,6 @@ let autoCastBinT(e: E, a1: E, b1: E): E =
             printfn "kore 2 %A %A" a.pos b.pos
             EBin(p, t1, ta, op, a, b.setT(t1))
         | _ -> raise(Exception "error")
-    printfn "e2=%A" e2
     // 比較演算子の場合返り値はTlとする
     let rc =
         match e2 with
@@ -66,7 +60,6 @@ let autoCastBinT(e: E, a1: E, b1: E): E =
             | "eq" | "ne" | "gt" | "lt" | "ge" | "le" -> EBin(p, Ti(64), t, op, a, b)
             | _ -> EBin(p, t, t, op, a, b)
         | _ -> raise(Exception "error")
-    printfn "rc=%A" rc
     rc
 (**
  * ２つの式の型を合わせる代入時処理
