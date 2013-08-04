@@ -3,6 +3,29 @@ module Test
 open System
 open System.Text.RegularExpressions
 
+let compile(file:string) =
+    try
+        GlobalEnv.init()
+        Env.init([])
+        
+        printfn "compile %s" file
+        let src = Exec.readAll(file)
+//        printfn "src = %s" src
+        let st = Compact.Parser.parse(src)
+        let ast = Transduce.apply(st)
+        let ast2 = Typing.apply(ast)
+        printfn "ast2 = %A" ast2
+        let codes = KNormal.apply(ast2)
+        let codes2 = ConstFold.apply(codes)
+        printfn "%A" codes2
+        LLEmit.apply("e.s", codes2)
+        printfn "%A" (Exec.run "llc e.s")
+        printfn "%A" (Exec.run "llvm-gcc -m64 e.s.s -o e lib/stdio.c")
+    with
+        e ->
+            printfn "%s" e.StackTrace
+            raise e
+
 let rec dirsUnder (path : string) = 
     [
         let sFiles = System.IO.Directory.GetFiles(path)
@@ -49,15 +72,15 @@ let test file =
                 raise(Exception(sprintf "error test %s %s\nexpected = %s but result = %s" file name expected result)    )
         with
             | Typing.TypeError(p,m) as e ->
-                printfn "%d %s '%s'" p.a m expected
-                if(expected="(null)") then () else raise e
+                printfn "%d %s '%s'" p.no m expected
+                if expected = "(null)" then () else raise e
             | e ->
                 printfn "%s" e.StackTrace
-                if(expected="(null)") then () else raise e
+                if expected = "(null)" then () else raise e
             
 let tests() =
     let f (n:int) (src:string) =
         test src
-        n+1
+        n + 1
     let no = List.fold f 0 (dirsUnder ("test")) 
     printfn "%d test ok" no

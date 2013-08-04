@@ -238,7 +238,7 @@ let rec transLocal(e: E): R =
         add(LLAlloca(r))
         Env.add(id, t)
 
-        printfn "knormal %A" envmap
+        // printfn "knormal %A" envmap
         match c with
         | ENull(_) -> r
         | _ -> transAssign(t, EId(p, t, id), c)

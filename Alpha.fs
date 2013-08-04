@@ -114,7 +114,7 @@ let rec f(e: E, env: Map<string, string>): E * Map<string, string> =
         | ESizeOf(p,_, _, _) -> (e, env)
         | EWhile(p,_, _, _) -> (e, env)
         | ENull(p) -> (e, env)
-    Console.Write(e.ToString()+"->"+rc.ToString())
+    // Console.Write(e.ToString()+"->"+rc.ToString())
     rc
 
 let g(e: E): E =

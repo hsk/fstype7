@@ -18,12 +18,12 @@
         <String>Env.fs</String>
         <String>Transduce.fs</String>
         <String>Alpha.fs</String>
+        <String>Exec.fs</String>
         <String>Typing.fs</String>
         <String>Asm.fs</String>
         <String>KNormal.fs</String>
         <String>ConstFold.fs</String>
         <String>LLEmit.fs</String>
-        <String>Exec.fs</String>
         <String>test/Test.fs</String>
         <String>Main.fs</String>
       </BuildOrder>
@@ -42,7 +42,7 @@
         <Command type="BeforeExecute" />
       </CustomCommands>
     </CustomCommands>
-    <Commandlineparameters>sample/hello.lll -run -d</Commandlineparameters>
+    <Commandlineparameters>sample/hello.lll -run</Commandlineparameters>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x86' ">
     <DebugSymbols>true</DebugSymbols>

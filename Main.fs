@@ -5,14 +5,6 @@ open System
 
 open System.Text.RegularExpressions
 
-(**
- * シンプルなメイン関数
- *)
-
-(**
- * 本格的なメイン関数
- *)
-
 let mutable debug = true
 
 
@@ -73,7 +65,7 @@ let comp(sname:string, opt:Opts, src:string) =
     let ast:Prog =
         match opt.p with
         | false ->
-            let st = Compact.Parser.parse(src)
+            let st = Compact.parse(src)
             if (debug) then
                 printfn "st=%A" st
             Transduce.apply(st)
@@ -162,35 +154,21 @@ let rec opts(args:string list, m:Opts) :Opts =
     | n::xs -> opts(xs, {m with files = n::m.files})
     | [] -> m
 
-let mutable imports:string list = []
-
-let importFile(file:string):unit =
-        
-    // 再度読み込み防止
-    match imports |> List.tryFind (fun a -> file = a) with
-    | None ->
-        ()
-    | Some(_) ->
-        imports <- file::imports
-        let src = Exec.readAll(file)
-        // パース
-        let st = Compact.Parser.parse(src)
-        let ast = Transduce.apply(st)
-
-        // 型付け
-        Typing.checkGlobalType(ast)
-        ()
 (**
- * メイン
+ * test main
+ *)
+let test_main(args: string []):int =
+    // Test.test("test/test_global_var/test_0004.lll")
+    //        Test.test("test/test_byte/test_0006.lll")
+    //Test.test("sample/hello.lll")
+    Test.tests()
+    0
+    
+(**
+ * シンプルなメイン関数
  *)
 let main1 (args: string []):int =
-
     try
-        // Test.test("test/test_global_var/test_0004.lll")
-        //        Test.test("test/test_byte/test_0006.lll")
-        //        Test.tests()
-        Test.test("sample/hello.lll")
-
         GlobalEnv.init()
         Env.init([])
 
@@ -208,15 +186,15 @@ let main1 (args: string []):int =
     with
         | e ->
             printfn "%A" e
-            0
+            1
 
-
+open Compact
+open Typing
 
 (**
- * メイン関数
+ * 本格的なメイン関数
  *)
-[<EntryPoint>]
-let main (args:string []) =
+let main2 (args:string []):int =
 
     try
         let args1 = List.ofArray(args)
@@ -245,8 +223,8 @@ let main (args:string []) =
             let f1 fs name =
                 if not(Regex(".*\\.lll$").IsMatch(name)) then
                     raise(Exception("error! file extension need .lll, but filename is " + name))
-                
-                if (debug) then Console.WriteLine("file " + name)
+                if (debug) then
+                    Console.WriteLine("file " + name)
                 let sname = Regex(".lll$").Replace(name, ".s")
                 let oname = Regex(".lll$").Replace(name, ".o")
                 let src = Exec.readAll(name)
@@ -258,22 +236,38 @@ let main (args:string []) =
             let objs = List.rev(List.fold f1 [] opt.files)
 
             if opt.link then
-
                 let out2 = if (opt.out = "") then (List.head objs) else opt.out
                 let out3 = Regex("(\\.lll|\\.o)$").Replace(out2, "")
-                let f1 file cmd = cmd + " " + file 
-                let cmd =
-                    "gcc -m"+opt.bit.ToString()+" -o " + out3 + " " + (List.fold f1 "" objs) +
+                let cmd = 
+                    "gcc -m" + opt.bit.ToString() + " -o " + out3 + " " + 
+                    (List.fold (fun file cmd -> cmd + " " + file) "" objs) +
                     " lib/gc.c lib/stdio.c " + opt.framework
-                
+
                 if (debug) then
                     Console.WriteLine(cmd)
-                Console.WriteLine (Exec.run cmd)
-                if (opt.run) then
-                    let (code, output, err) = Exec.run("./" + out3)
-                    Console.WriteLine(output)
-            0
+                
+                match (Exec.run cmd) with
+                | (0, _, _) ->
+                    if (opt.run) then
+                        let (code, output, err) = Exec.run("./" + out3)
+                        Console.WriteLine(output)
+                        code
+                    else 0
+
+                | (code, output, error) ->
+                    Console.Write output
+                    Console.Write error
+                    code
+            else 0                    
     with
     | e ->
         printfn "%A" e
         1
+
+[<EntryPoint>]
+let main(args:string []):int =
+    // test_main args
+    // main1 args
+    // main2 args
+    main2 ("sample/opengl.lll sample/program.lll -run -framework OpenGL -framework glut".Split(' '))
+    

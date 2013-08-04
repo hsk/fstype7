@@ -78,7 +78,7 @@ let autoCastBinT(e: E, a1: E, b1: E): E =
  *)
 let unifyBinT(f: E, a: E, b: E): E =
 
-    printfn "unifyBinT\nf=%A\na=%A\nb=%A" f a b
+    // printfn "unifyBinT\nf=%A\na=%A\nb=%A" f a b
     match (a.t, b.t) with
     // aとbが同じなら親も同じにする
     | (t1, t2) when (t1.stripType([]) = t2.stripType([])) -> EAssign(f.pos, t1, a, b)
@@ -97,6 +97,7 @@ let unifyBinT(f: E, a: E, b: E): E =
     | (t1, Tn) ->
         raise(TypeError(a.pos, sprintf "kore 4 %A" b.pos))// p(f, f.copy(t1, a, setT(b, t1)))
     | (t1, t2) -> raise(TypeError(a.pos, sprintf "type error %A %A" b.pos a ))
+
 
 let mutable funType: T = Tn
 
@@ -249,9 +250,9 @@ let rec typingLocal(pt: T, e: E): E =
     | EBin(p, t: T, it: T, i, a: E, b: E) ->
         autoCastBinT(e, typingLocal(pt, a), typingLocal(pt, b))
     | EAssign(p, t, a: E, b: E) ->
-        printfn "EAssign pt=%A %A" pt e
+        // printfn "EAssign pt=%A %A" pt e
         let rc = unifyBinT(e, typingLocal(pt, a), typingLocal(pt, b))
-        printfn "EAssign rc=%A" rc
+        // printfn "EAssign rc=%A" rc
         rc
     | ENot(p, t: T, a: E) ->
         let a2 = typingLocal(Ti(64), a)
@@ -387,8 +388,8 @@ let rec typingLocal(pt: T, e: E): E =
             | _ -> throw TypeError("error undefined function " + a);
         }*)
     | ENull(p) -> e
-    | EImport(p,_) -> e
-    | ETuple(p,_,_) -> raise(Exception "don't use tuple this place")
+    | EImport(p,_) -> raise(Exception "can't use import in function")
+    | ETuple(p,_,_) -> raise(Exception "can't use tuple this place")
 
 let typingGlobalVar(ecopy: (P * T * string * E) -> E, ep: P, t: T, b: String, c: E): (string * T * E) =
     if (Env.contains(b)) then
@@ -424,6 +425,9 @@ let typingGlobalVar(ecopy: (P * T * string * E) -> E, ep: P, t: T, b: String, c:
             | _ -> raise(TypeError(ep, a + " type unmatch"))
     | _ -> raise(Exception "error")
 
+let mutable imports:string list = []
+
+
 (**
  * トップレベルの型付け
  * function以外は環境に取り込み済みなので、関数内部のみ処理する
@@ -432,7 +436,7 @@ let typingGlobalVar(ecopy: (P * T * string * E) -> E, ep: P, t: T, b: String, c:
  * @return E
  *)
 let typingGlobal(e: E): E =
-    printfn "f %A" e
+    // printfn "f %A" e
     match e with
     | EFun(p, t, id, p1, b) ->
         // 関数の型で環境を初期化
@@ -469,7 +473,7 @@ let typingGlobal(e: E): E =
         let (b1, t1, e1) = typingGlobalVar(EVal, p, t, b, c)
         GlobalEnv.add(b1, t1)
         e1
-    | EImport _ -> e // スルー
+    | EImport _ -> e
     | ETypeDef _ -> e
     | ENop _ -> e
     | e -> raise (Exception("error " + e.ToString())) // スルー
@@ -482,7 +486,7 @@ let typingGlobal(e: E): E =
  * 先に型を調べる事で、前方参照が可能になります。前方とはソースコードの下方向です。
  * 使用する前に定義されていない型を使えるようにするために、先にソース全体の型だけチェックしてしまいます。
  *)
-let checkGlobalType(e: Prog):unit =
+let rec checkGlobalType(e: Prog):unit =
     let f e =
         match e with
         // 関数の型を環境に保存
@@ -506,12 +510,28 @@ let checkGlobalType(e: Prog):unit =
 
         // 何かの残骸は読み捨て
         | ENop _ -> ()
-        | EImport _ -> ()//Main2.importFile(id + ".lll")
+        | EImport(p, id) -> importFile(id + ".lll")
 
         | e ->
             raise(TypeError(e.pos, sprintf "syntax error found unexpected expression in global scope %A" e))
     match e with
     | Prog(b) -> List.iter f b
+and importFile(file:string):unit =
+        
+    // 再度読み込み防止
+    match imports |> List.tryFind (fun a -> file = a) with
+    | Some(_) ->
+        ()
+    | None ->
+        imports <- file::imports
+        let src = Exec.readAll(file)
+        // パース
+        let st = Compact.parse(src)
+        let ast = Transduce.apply(st)
+
+        // 型付け
+        checkGlobalType(ast)
+        ()
 
 (**
  * 型チェック本体

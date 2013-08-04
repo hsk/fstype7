@@ -13,10 +13,12 @@ type Pos(src:string, no:int) =
         with get() = no
     member this.src
         with get() = src
-    override this.ToString() =
+
+    override this.ToString():string = this.p()
+    
+    member this.p():string =
         let rec getLineNo(start:int, line:int):string =
             let index = src.IndexOf('\n', start)
-            printfn "index = %d" index
             if (index < 0) then
                 "EOF"
             else if (index >= this.no) then
@@ -207,7 +209,7 @@ module Parser =
                             ";", OIe(3)
                             ])
 
-    let com1 = Regex("""^(//[^\r\n]*)(\r\n|\r|\n)(.*$)""",RegexOptions.Singleline)
+    let com1 = Regex("""^(//[^\r\n]*)(\r\n|\r|\n|)(.*$)""",RegexOptions.Singleline)
     let com = Regex("""^(/\*.*?\*/)(.*$)""",RegexOptions.Singleline)
     let xnum = Regex("""^(0x)([0-9A-Fa-f]+)(L?)(.*$)""",RegexOptions.Singleline)
     let num = Regex("""^([0-9]+)(L?)(.*$)""",RegexOptions.Singleline)
@@ -268,7 +270,6 @@ module Parser =
                     //    """\\u([0-9a-fA-F]{4})""".r.replaceAllIn(e2, m -> String.valueOf(Integer.parseInt(m.group(1), 16)) )
                     //println("e2='"+e2+"'")
                     e2
-                
                 match str with
                 | Reg com [a; e] ->
                     str <- e
@@ -350,3 +351,6 @@ module Parser =
                 let b = loop(exp(p), 0)
                 Bin(t, Id(b.pos, "@"), b)
         loop(exp(0), 0)
+
+let parse(src: string): Token = Parser.parse(src)
+

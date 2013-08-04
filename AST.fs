@@ -31,9 +31,21 @@ type T =
     (** 関数型 *)
     | TFun of T * T list
 
-type P(src:string, a:int) =
-    member this.a
-        with get() = a
+type P(src:string, no:int) =
+    member this.no
+        with get() = no
+    override this.ToString():string = this.p()
+    
+    member this.p():string =
+        let rec getLineNo(start:int, line:int):string =
+            let index = src.IndexOf('\n', start)
+            if (index < 0) then
+                "EOF"
+            else if (index >= this.no) then
+                "(" + line.ToString() + ")"
+            else
+                getLineNo(index+1, line + 1)
+        getLineNo(0, 1)
 
 let P0 = P("", 0)
 
@@ -409,7 +421,6 @@ type T with
             match (List.tryFind (fun (t,r) -> t=this) structs) with
             | None ->
                 let id = GenId.genid(".struct")
-                printfn "add id %A %A" id ls
                 structs <- (this , RL(this, id)) :: structs
                 List.iter (fun (id,t:T) -> t.p |> ignore) ls
             | _ -> ()

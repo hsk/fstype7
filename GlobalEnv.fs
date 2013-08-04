@@ -11,7 +11,6 @@ let mutable ts = new Map<T, string>([])
  * 初期化
  *)
 let init() =
-    printfn "init"
     globalmap <- [
       "println", TFun(Tv,[Tp(Tu(8))]);
       "print_b", TFun(Tv,[Ti(8)]);
@@ -31,7 +30,7 @@ let init() =
     structs <- []
     ()
 
-init()
+init() |> ignore
 
 (**
  * シンボルを追加
@@ -53,9 +52,9 @@ let mapfind(id:string):T =
     try
         globalmap |> List.find (fun(id2, t) -> id = id2) |> fun(a,b) -> b
     with
-        e ->
-            printfn "global %A env %A" globalmap envmap
-            raise e
+    | e ->
+        printfn "global %A env %A " globalmap envmap
+        raise (System.Exception(sprintf "%s not found." id))
 (**
  * シンボル検索
  *)

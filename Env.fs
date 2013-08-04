@@ -51,7 +51,7 @@ let mapfind(id:string):T = find id
  * 検索してレジスタで返却
  *)
 let findR(id: string):R =
-    printfn "%A" envmap
+//    printfn "%A" envmap
     if contains(id) then
         RL(find(id),id)
     else

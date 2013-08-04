@@ -21,27 +21,3 @@ let run (cmd:string):(int * string * string) =
     proc.Start() |> ignore
     proc.WaitForExit()
     (proc.ExitCode, proc.StandardOutput.ReadToEnd() ,proc.StandardError.ReadToEnd())
-
-let compile(file:string) =
-    try
-        GlobalEnv.init()
-        Env.init([])
-        
-        printfn "compile %s" file
-        let src = readAll(file)
-//        printfn "src = %s" src
-        let st = Compact.Parser.parse(src)
-        let ast = Transduce.apply(st)
-        let ast2 = Typing.apply(ast)
-        printfn "ast2 = %A" ast2
-        let codes = KNormal.apply(ast2)
-        let codes2 = ConstFold.apply(codes)
-        printfn "%A" codes2
-        LLEmit.apply("e.s", codes2)
-        printfn "%A" (run "llc e.s")
-        printfn "%A" (run "llvm-gcc -m64 e.s.s -o e lib/stdio.c")
-    with
-        e ->
-            printfn "%s" e.StackTrace
-            raise e
-            

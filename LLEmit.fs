@@ -5,7 +5,7 @@ module LLEmit
 
 open System
 open AST
-
+open System.Text.RegularExpressions
 
 type Const =
     | CStr of string * string * T
@@ -28,6 +28,9 @@ let p(id: R, out: string):unit =
 
 (** 出力完了関数リスト *)
 let mutable completeds:string list = []
+
+let comment(out:string) :unit =
+    Asm.p("; " + (Regex("\\n").Replace(out,"\n; ")))
 
 (**
  * LL出力
@@ -112,7 +115,7 @@ let rec output(l: LL):unit =
         Asm.p("store " + s.t.p + " " + s.p + ", " + r.t.p + " " + r.p)
 
     | LLAlloca(r: R) ->
-        Asm.p("; "+r.ToString())
+        comment(r.ToString())
         p(r, "alloca " + r.t.p)
 
     | LLField(r: R, addr: R, RNULL, a: R) ->
@@ -145,7 +148,6 @@ let rec output(l: LL):unit =
         List.iter (fun (a:Const) ->
             match a with
             | CStr(id, asc, t) ->
-                printfn "asc=[%s]" asc
                 let a2 = asc.Replace("\\","\\\\")
                 let a3 = a2.Replace("\"", "\\" + (sprintf "%x" (int '"')))
                 Asm.p("@." + id + "= private constant " + t.p + " c\"" + a3 + "\\00\"")
@@ -154,7 +156,7 @@ let rec output(l: LL):unit =
         ) consts
 
     | LLCast(r: R, b: R) ->
-        Asm.p__(sprintf "; %A %A" r b)
+        comment(sprintf "%A %A" r b)
         match (r.t.stripType([]), b.t.stripType([])) with
         | (Tp(t), Tp(_)) ->
             p(r, "bitcast " + b.t.p + " " + b.p + " to " + r.t.p)
@@ -182,7 +184,7 @@ let rec output(l: LL):unit =
             p(r, "trunc " + b.t.p + " " + b.p + " to " + r.t.p)
 
     | LLNop(s: string) ->
-        Asm.p__("; " + s)
+        comment(s)
 
     | LLJne(r: R, label: string, jmp1: string, jmp2: string) ->
         let reg = GenId.genid("%reg_")

@@ -1,4 +1,4 @@
-import opengl
+import sample.opengl
 
 var GLUT_RGBA:int = 0
 var GLUT_DOUBLE:int = 2

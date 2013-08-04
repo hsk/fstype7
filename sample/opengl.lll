@@ -15,7 +15,6 @@ def glutSpecialUpFunc(f:(byte, int, int) => void):void
 def glutFullScreen():void
 def glutReshapeWindow(w:int,h:int):void
 def glLoadIdentity():void
-def glEnable(a:int):void
 def glClear(a:int):void
 def glFlush():void
 def glBegin(a:int):void
