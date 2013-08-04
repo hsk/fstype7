@@ -1,0 +1,6 @@
+///>name double 足し算結果表示
+/*** result
+(0,30.000000
+,)
+result ***/
+def main(){{print_d(10.0+20.0)}}

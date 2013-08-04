@@ -1,0 +1,18 @@
+///>name 構造体
+/*** result
+(0,3
+33
+,)
+result ***/
+def main(){
+	var b:struct{
+		a:byte
+		b:struct{
+			c:byte
+		}
+	}
+	b.a = 3
+	print_b(b.a)
+	b.b.c = 33
+	print_b(b.b.c)
+}

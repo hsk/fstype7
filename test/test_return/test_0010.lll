@@ -1,0 +1,8 @@
+///>name tail if 5
+/*** result
+(null)
+result ***/
+def main():void = {
+	print_l({print_l(1);33});
+	if(1)return 1; else 1;
+}

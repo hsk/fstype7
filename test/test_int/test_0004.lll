@@ -1,0 +1,6 @@
+///>name int 1次元配列
+/*** result
+(0,333333
+,)
+result ***/
+def main(){{ var c:int[3]; c[0] = 333333; print_i(c[0]) }}

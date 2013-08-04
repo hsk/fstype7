@@ -1,0 +1,6 @@
+///>name function pointer local var 2
+/*** result
+(0,20
+,)
+result ***/
+def a(n:int) { print_i(n) } def main() { var ccc= a; ccc(20);}

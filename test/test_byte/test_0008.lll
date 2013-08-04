@@ -1,0 +1,11 @@
+///>name longポインタをbyteポインタにして計算してみる
+/*** result
+(0,33
+33
+33
+0
+2
+8589934625
+,)
+result ***/
+def main(){{var e:long[3]; e[1] = 33; print_l(e[1]);var ep:*long;ep = e;print_l(ep[1]);var fp:*byte; fp = e;print_b(fp[8]); print_b(fp[12]);fp[12] = 2;print_b(fp[12]) ;print_l(ep[1]);}}

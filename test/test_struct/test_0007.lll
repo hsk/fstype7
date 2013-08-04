@@ -1,0 +1,8 @@
+///>name 構造体のポインタ演算
+/*** result
+(0,10
+5
+6
+,)
+result ***/
+def main(){{ typedef ABC1 = struct{x:int y:int}  typedef ABC = struct{x:int y:int z:Ptr[ABC1]}  var a = new ABC a.x = 10 a.z = new ABC1 a.z.x=5 a.z.y=6 print_i(a.x) print_i(a.z.x) print_i(a.z.y)}}

@@ -1,0 +1,6 @@
+///>name fun void
+/*** result
+(0,1
+,)
+result ***/
+def main():void = {print_l(a());}def a():long = 1

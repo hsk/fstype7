@@ -1,0 +1,6 @@
+///>name int ポインタ演算
+/*** result
+(0,12
+,)
+result ***/
+def main(){{ var a:int; var b:int; var c:int;var p:Ptr[int]; p = &c; a = 12; p = p + 2; print_i(p[0]) }}

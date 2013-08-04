@@ -1,0 +1,11 @@
+///>name longポインタをintポインタにして計算してみる
+/*** result
+(0,33
+33
+33
+0
+2
+8589934625
+,)
+result ***/
+def main(){{var e:Array[long,3]; e[1] = 33; print_l(e[1]);var ep:Ptr[long];ep = e;print_l(ep[1]);var fp:Ptr[int]; fp = e;print_i(fp[2]); print_i(fp[3]);fp[3] = 2;print_i(fp[3]) ;print_l(ep[1]);}}

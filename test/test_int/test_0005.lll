@@ -1,0 +1,6 @@
+///>name int 2次元配列
+/*** result
+(0,444
+,)
+result ***/
+def main(){{ var d:int[2][3]; d[0][0] = 444; print_i(d[0][0]) }}

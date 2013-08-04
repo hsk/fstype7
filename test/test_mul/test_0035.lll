@@ -1,0 +1,6 @@
+///>name long 右シフト結果表示
+/*** result
+(0,16
+,)
+result ***/
+def main(){{var a:long; var b:long; var c:long; a=67; b = 2; c = a >> b; print_l(c)}}

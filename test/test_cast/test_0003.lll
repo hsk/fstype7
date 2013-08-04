@@ -1,0 +1,6 @@
+///>name double を long にする
+/*** result
+(0,12
+,)
+result ***/
+def main(){{ var a:double var b:long a = 10.0 b = 2 b = cast(long)a + b; print_l(b)}}

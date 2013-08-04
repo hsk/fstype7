@@ -1,0 +1,6 @@
+///>name byte 引き算結果表示
+/*** result
+(0,-10
+,)
+result ***/
+def main(){{print_b(10 - 20)}}

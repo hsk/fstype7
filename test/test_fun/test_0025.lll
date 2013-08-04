@@ -1,0 +1,6 @@
+///>name function pointer local struct
+/*** result
+(0,20
+,)
+result ***/
+def a(n:int) { print_i(n) } def main() { typedef A = struct {m:(int)=>void}; var a1:A; a1.m= a; a1.m(20);}

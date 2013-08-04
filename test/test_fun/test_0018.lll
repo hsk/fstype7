@@ -1,0 +1,6 @@
+///>name fun syntax sugger
+/*** result
+(0,1
+,)
+result ***/
+def main() {print_l(1);}

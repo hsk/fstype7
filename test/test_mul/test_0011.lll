@@ -1,0 +1,6 @@
+///>name float 割り算結果表示
+/*** result
+(0,3.000000
+,)
+result ***/
+def main(){{var a:float; var b:float; var c:float; a=9.0; b = 3.0; c = a / b; print_f(c)}}

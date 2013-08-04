@@ -1,0 +1,6 @@
+///>name byte 割り算結果表示
+/*** result
+(0,2
+,)
+result ***/
+def main(){{var a:byte; var b:byte; var c:byte; a=8; b = 3; c = a / b; print_b(c)}}

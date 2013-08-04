@@ -1,0 +1,6 @@
+///>name global var
+/*** result
+(0,1
+,)
+result ***/
+var a=1; def main() {print_l(a);}

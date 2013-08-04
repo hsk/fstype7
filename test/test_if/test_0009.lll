@@ -1,0 +1,6 @@
+///>name if (20 <= 10) print_i(1) else print_i(2)
+/*** result
+(0,2
+,)
+result ***/
+def main(){{if (20 <= 10) print_i(1) else print_i(2)}}

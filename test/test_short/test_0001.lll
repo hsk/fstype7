@@ -1,0 +1,6 @@
+///>name short 10を表示
+/*** result
+(0,10
+,)
+result ***/
+def main(){{print_s(10)}}

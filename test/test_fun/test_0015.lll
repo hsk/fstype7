@@ -1,0 +1,6 @@
+///>name fun fib long 
+/*** result
+(0,832040
+,)
+result ***/
+def main():void = {var a:long; a=30; print_l(fact(a));}def fact(a:long):long = if(a==0) 0 else if(a==1) 1 else fact(a-1)+fact(a-2)

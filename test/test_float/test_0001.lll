@@ -1,0 +1,6 @@
+///>name float 10.0を表示
+/*** result
+(0,10.000000
+,)
+result ***/
+def main(){{print_f(10.0)}}

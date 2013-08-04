@@ -1,0 +1,6 @@
+///>name 文字列リテラル
+/*** result
+(0,aaaa
+,)
+result ***/
+def main(){println("aaaa")}

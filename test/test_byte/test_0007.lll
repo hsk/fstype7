@@ -1,0 +1,8 @@
+///>name byteのポインタを適当に変形してみる
+/*** result
+(0,258
+2
+1
+,)
+result ***/
+def main(){{var e:long[3]; e[0] = 258; var f:*byte; f = e; print_l(e[0]); print_b(f[0]); print_b(f[1]);}}

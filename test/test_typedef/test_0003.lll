@@ -1,0 +1,6 @@
+///>name typedef long 1次元配列
+/*** result
+(0,333
+,)
+result ***/
+def main(){{typedef mylong=long; typedef la3 = mylong[3]; var c:la3; c[0]=333;print_l(cast(long)(*c));}}

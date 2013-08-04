@@ -1,0 +1,6 @@
+///>name if (0) print_i(1) else print_i(2)
+/*** result
+(0,2
+,)
+result ***/
+def main(){{var a:long; a = 0; if (a) print_i(1) else print_i(2)}}

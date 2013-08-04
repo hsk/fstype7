@@ -1,0 +1,6 @@
+///>name sizeof(a:int)
+/*** result
+(0,4
+,)
+result ***/
+def main(){{var a:int print_l(sizeof(a))}}

@@ -1,0 +1,6 @@
+///>name function pointer global struct 5
+/*** result
+(0,20
+,)
+result ***/
+def main(){b(20)}def b(a:int){var a1:int a1=a;print_i(a1)}

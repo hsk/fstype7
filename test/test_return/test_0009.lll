@@ -1,0 +1,8 @@
+///>name tail if 4
+/*** result
+(0,1
+33
+1
+,)
+result ***/
+def main():void = { print_l({print_l(1);33});if(1)print_l(1) else 1;}

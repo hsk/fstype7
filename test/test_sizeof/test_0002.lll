@@ -1,0 +1,6 @@
+///>name sizeof(int)
+/*** result
+(0,4
+,)
+result ***/
+def main(){{print_l(sizeof(int))}}

@@ -1,0 +1,9 @@
+///>name 文字列出力''
+/*** result
+(0,
+,)
+result ***/
+
+def main(){
+	println("")
+}

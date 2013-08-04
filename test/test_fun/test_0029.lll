@@ -1,0 +1,6 @@
+///>name function pointer global struct 4
+/*** result
+(0,20
+,)
+result ***/
+typedef A=struct{m:(int)=>void}def a(n:int){print_i(n)}var a1:Ptr[A]def main(){var a1:A b(&a1)}def b(a1:Ptr[A]){a1.m=a;a1.m(20)}

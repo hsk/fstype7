@@ -1,0 +1,6 @@
+///>name long 10を表示
+/*** result
+(0,10
+,)
+result ***/
+def main(){{print_l(10L)}}

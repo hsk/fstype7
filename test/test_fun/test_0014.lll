@@ -1,0 +1,6 @@
+///>name fun fact float 
+/*** result
+(0,3628800
+,)
+result ***/
+def main():void = {var a:long; a=10; print_l(fact(a));}def fact(a:long):long = if(a==0) 1 else a * fact(a-1)

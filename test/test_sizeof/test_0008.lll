@@ -1,0 +1,6 @@
+///>name sizeof(struct)
+/*** result
+(0,5
+,)
+result ***/
+def main(){{typedef A = struct {a:int;b:byte} var a:A print_l(sizeof(a))}}

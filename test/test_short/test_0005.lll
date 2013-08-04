@@ -1,0 +1,6 @@
+///>name short 2次元配列
+/*** result
+(0,444
+,)
+result ***/
+def main(){{ var d:short[2][3]; d[0][0] = 444; print_s(d[0][0]) }}

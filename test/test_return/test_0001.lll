@@ -1,0 +1,6 @@
+///>name fun void
+/*** result
+(0,3
+,)
+result ***/
+def main():void = {myprint(3);}def myprint(a:long):void = {  print_l(a); return}

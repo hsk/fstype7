@@ -1,0 +1,6 @@
+///>name long 1次元配列
+/*** result
+(0,333
+,)
+result ***/
+def main(){{ var c:long[3]; c[0] = 333; print_l(c[0])}}

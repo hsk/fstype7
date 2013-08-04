@@ -1,0 +1,6 @@
+///>name switch(2)
+/*** result
+(0,2
+,)
+result ***/
+def main(){{2 is {1? print_l(1); break; 2? print_l(2); break;_? print_l(0) } }}

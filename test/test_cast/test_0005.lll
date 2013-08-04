@@ -1,0 +1,6 @@
+///>name byte を long にする
+/*** result
+(0,12
+,)
+result ***/
+def main(){{ var a:byte var b:long a = 10 b = 2 b = a + b; print_l(b)}}

@@ -1,0 +1,6 @@
+///>name int かけ算結果表示
+/*** result
+(0,6
+,)
+result ***/
+def main(){{var a:int; var b:int; var c:int; a=2; b = 3; c = a * b; print_i(c)}}

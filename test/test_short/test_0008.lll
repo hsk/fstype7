@@ -1,0 +1,11 @@
+///>name longポインタをshortポインタにして計算してみる
+/*** result
+(0,33
+33
+33
+0
+2
+8589934625
+,)
+result ***/
+def main(){{var e:long[3]; e[1] = 33; print_l(e[1]);var ep:*long;ep = e;print_l(ep[1]);var fp:*short; fp = e;print_s(fp[4]); print_s(fp[6]);fp[6] = 2;print_s(fp[6]) ;print_l(ep[1]);}}

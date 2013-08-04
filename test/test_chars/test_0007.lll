@@ -1,0 +1,7 @@
+///>name 文字列出力4
+/*** result
+(0,a
+
+,)
+result ***/
+def main(){{println("a\n")}}

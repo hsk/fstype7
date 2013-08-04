@@ -1,0 +1,14 @@
+///>name function pointer var
+/*** result
+(0,10
+,)
+result ***/
+def a(ff:(int)=>void) {
+	ff(10)
+}
+def f(a:int){
+	print_i(a)
+}
+def main() {
+	a(f)
+}

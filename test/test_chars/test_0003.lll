@@ -1,0 +1,6 @@
+///>name 文字列出力'a'
+/*** result
+(0,a
+,)
+result ***/
+def main(){{println("a")}}

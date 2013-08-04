@@ -1,0 +1,6 @@
+///>name sizeof(1)
+/*** result
+(0,8
+,)
+result ***/
+def main(){{print_l(sizeof(1))}}

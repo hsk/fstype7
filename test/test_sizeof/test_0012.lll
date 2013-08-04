@@ -1,0 +1,6 @@
+///>name sizeof(typedef int)
+/*** result
+(0,20
+,)
+result ***/
+def main(){{typedef A = int[5] typedef B = A  print_l(sizeof(B))}}

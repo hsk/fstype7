@@ -1,0 +1,6 @@
+///>name long ポインタ演算
+/*** result
+(0,12345
+,)
+result ***/
+def main(){{ var a:long; var b:long; var c:long; var p:*long; p = &c; a = 12345L; p = p + 2; print_l(p[0]) }}

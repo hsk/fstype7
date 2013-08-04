@@ -1,0 +1,6 @@
+///>name byte 2次元配列
+/*** result
+(0,44
+,)
+result ***/
+def main(){{ var d:byte[2][3]; d[0][0] = 44; print_b(d[0][0]) }}

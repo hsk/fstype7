@@ -1,0 +1,6 @@
+///>name longのtypedef
+/*** result
+(0,12
+,)
+result ***/
+def main(){{typedef mylong=long; print_l(12);}}

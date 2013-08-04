@@ -1,0 +1,6 @@
+///>name double 1次元配列
+/*** result
+(0,33.000000
+,)
+result ***/
+def main(){{ var c:double[3]; c[0] = 33.0; print_d(c[0]) }}

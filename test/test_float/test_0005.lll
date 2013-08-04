@@ -1,0 +1,6 @@
+///>name float 1次元配列
+/*** result
+(0,33.000000
+,)
+result ***/
+def main(){{ var c:float[3]; c[0] = 33.0; print_f(c[0]) }}

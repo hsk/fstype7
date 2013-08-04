@@ -1,0 +1,7 @@
+///>name long 配列のポインタ演算
+/*** result
+(0,12345
+22222
+,)
+result ***/
+def main(){{var a:long[3]; var b:long[3]; var c:long[3]; var p:*long[3];p = &c; a[1] = 12345; b[1] = 22222;p = p + 2; print_l(p[0][1]);p = p - 1; print_l(p[0][1]);}}

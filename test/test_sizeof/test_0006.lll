@@ -1,0 +1,6 @@
+///>name sizeof(a:short)
+/*** result
+(0,2
+,)
+result ***/
+def main(){{var a:short print_l(sizeof(a))}}

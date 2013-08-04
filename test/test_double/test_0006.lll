@@ -1,0 +1,6 @@
+///>name double ポインタ演算
+/*** result
+(0,12.500000
+,)
+result ***/
+def main(){{ var a:double; var b:double; var c:double;var p:*double; p = &c; a = 12.5; p = p + 2; print_d(p[0]) }}

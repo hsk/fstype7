@@ -1,0 +1,6 @@
+///>name sizeof(struct)
+/*** result
+(0,5
+,)
+result ***/
+def main(){{print_l(sizeof(struct{a:int;b:byte}))}}

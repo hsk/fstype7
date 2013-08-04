@@ -1,0 +1,6 @@
+///>name if (0) print_i(1) else print_i(2)
+/*** result
+(0,1
+,)
+result ***/
+def main(){{if (!0) print_i(1) else print_i(2)}}

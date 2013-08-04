@@ -1,0 +1,6 @@
+///>name long 2次元配列
+/*** result
+(0,3333
+,)
+result ***/
+def main(){{ var d:long[2][3]; d[0][0] = 3333; print_l(d[0][0]) }}

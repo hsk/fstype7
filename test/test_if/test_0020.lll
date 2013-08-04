@@ -1,0 +1,6 @@
+///>name switch(0) {case 1: print_l(1); default: print_l(0) } 
+/*** result
+(0,0
+,)
+result ***/
+def main(){{switch(0) {case 1: print_l(1); default: print_l(0) } }}

@@ -1,0 +1,7 @@
+///>name リスト構造
+/*** result
+(0,111
+44
+,)
+result ***/
+def main(){{ typedef List = struct{data:byte; next:*List} var b:*List;b = new List;var a:List;a.data = 111;a.next = new List;a.next->data = 44;print_b(a.data);print_b(a.next->data);}}

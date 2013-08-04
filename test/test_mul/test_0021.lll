@@ -1,0 +1,6 @@
+///>name float マイナス結果表示
+/*** result
+(0,-2.000000
+,)
+result ***/
+def main(){{var a:float; var c:float; a=2.0; c = -a; print_f(c)}}

@@ -1,0 +1,6 @@
+///>name int マイナス結果表示
+/*** result
+(0,-2
+,)
+result ***/
+def main(){{var a:int; var c:int; a=2; c = -a; print_i(c)}}

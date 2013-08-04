@@ -1,0 +1,6 @@
+///>name short マイナス結果表示
+/*** result
+(0,-2
+,)
+result ***/
+def main(){{var a:short; var c:short; a=2; c = -a; print_s(c)}}

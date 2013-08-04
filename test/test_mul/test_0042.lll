@@ -1,0 +1,6 @@
+///>name int or結果表示
+/*** result
+(0,7
+,)
+result ***/
+def main(){{var a:int; var b:int; var c:int; a=5; b = 3; c = a | b; print_i(c)}}

@@ -1,0 +1,8 @@
+///>name for({var a:long a = 1};a <= 3; a++) print_l(a) 
+/*** result
+(0,0
+1
+2
+,)
+result ***/
+def main(){{var a:long;for(a = 0;a < 3; a = a + 1) print_l(a) }}

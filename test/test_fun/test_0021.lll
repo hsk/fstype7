@@ -1,0 +1,18 @@
+///>name global struct
+/*** result
+(0,1
+2
+,)
+result ***/
+
+typedef A = struct {
+	x:int;
+	a:int
+}
+
+var a:A=(1,2)
+def main() {
+	print_i(a.x);
+	print_i(a.a);
+	a.x=10;
+}

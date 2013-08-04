@@ -1,0 +1,6 @@
+///>name fun inc long 
+/*** result
+(0,2
+,)
+result ***/
+def main():void = {print_l(inc(1));}def inc(a:long):long = {  a + 1}

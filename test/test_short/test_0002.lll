@@ -1,0 +1,6 @@
+///>name short 足し算結果表示
+/*** result
+(0,30
+,)
+result ***/
+def main(){{print_s(10+20)}}

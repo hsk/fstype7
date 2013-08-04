@@ -1,0 +1,7 @@
+///>name tail void
+/*** result
+(0,1
+33
+,)
+result ***/
+def main():void = { print_l({print_l(1);33}); 1}

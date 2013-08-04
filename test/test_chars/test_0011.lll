@@ -1,0 +1,6 @@
+///>name 文字列出力8
+/*** result
+(0,a\a
+,)
+result ***/
+def main(){{println("a\a")}}

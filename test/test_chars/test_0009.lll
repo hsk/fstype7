@@ -1,0 +1,6 @@
+///>name 文字列出力6
+/*** result
+(0,a	
+,)
+result ***/
+def main(){{println("a\t")}}

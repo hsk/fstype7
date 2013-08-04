@@ -1,0 +1,6 @@
+///>name sizeof(a:byte)
+/*** result
+(0,1
+,)
+result ***/
+def main(){{var a:byte print_l(sizeof(a))}}

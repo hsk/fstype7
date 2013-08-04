@@ -1,0 +1,6 @@
+///>name short ポインタ演算
+/*** result
+(0,12
+,)
+result ***/
+def main(){{ var a:short; var b:short; var c:short;var p:*short; p = &c; a = 12; p = p + 2; print_s(p[0]) }}

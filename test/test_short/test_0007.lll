@@ -1,0 +1,8 @@
+///>name shortのポインタを適当に変形してみる
+/*** result
+(0,65538
+2
+1
+,)
+result ***/
+def main(){{var e:long[3]; var f:*short; f = e; e[0] = 65538; print_l(e[0]); print_s(f[0]); print_s(f[1]);}}

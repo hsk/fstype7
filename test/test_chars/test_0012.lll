@@ -1,0 +1,6 @@
+///>name 文字列出力9
+/*** result
+(0,λ1
+,)
+result ***/
+def main(){{println("λ1")}}

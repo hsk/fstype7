@@ -1,0 +1,6 @@
+///>name byte 1次元配列
+/*** result
+(0,33
+,)
+result ***/
+def main(){{ var c:byte[3]; c[1] = 33; print_b(c[1])}}

@@ -1,0 +1,6 @@
+///>name long を double にする
+/*** result
+(0,12.000000
+,)
+result ***/
+def main(){{ var a:double var b:long a = 10.0 b = 2 a = b + a; print_d(a)}}

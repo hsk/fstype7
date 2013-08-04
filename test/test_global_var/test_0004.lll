@@ -1,0 +1,11 @@
+///>name fun void
+/*** result
+(0,,)
+result ***/
+
+def f(a:float,b:float) {
+  var c = Array(a,b)
+}
+def main() {
+  f(1.1,2.2)
+}

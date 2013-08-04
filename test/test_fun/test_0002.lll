@@ -1,0 +1,18 @@
+///>name pointer to struct 
+/*** result
+(0,20
+,)
+result ***/
+def main() {
+	var a1:A b(&a1,a)
+}
+
+def b(a1:Ptr[A],a:(int)=>void) {
+	a1.m= a a1.m(20)
+}
+typedef A=struct {
+	m:(int)=>void
+}
+def a(n:int) {
+	print_i(n)
+}

@@ -1,0 +1,6 @@
+///>name 文字列出力10
+/*** result
+(0,あいうえa
+,)
+result ***/
+def main(){{println("あいうえa")}}

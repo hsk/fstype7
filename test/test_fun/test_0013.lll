@@ -1,0 +1,6 @@
+///>name fun inc float 
+/*** result
+(0,3.000000
+,)
+result ***/
+def main():void = print_f(inc(2.0));def inc(a:float):float = a + cast(float)1.0

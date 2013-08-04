@@ -1,0 +1,6 @@
+///>name double 10.0を表示
+/*** result
+(0,10.000000
+,)
+result ***/
+def main(){{print_d(10.0)}}

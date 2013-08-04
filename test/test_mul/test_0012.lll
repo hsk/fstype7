@@ -1,0 +1,6 @@
+///>name double 割り算結果表示
+/*** result
+(0,3.000000
+,)
+result ***/
+def main(){{var a:double; var b:double; var c:double; a=9.0; b = 3.0; c = a / b; print_d(c)}}

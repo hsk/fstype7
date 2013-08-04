@@ -1,0 +1,6 @@
+///>name long 引き算結果表示
+/*** result
+(0,-10
+,)
+result ***/
+def main(){{print_l(10L - 20L)}}

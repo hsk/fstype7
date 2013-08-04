@@ -1,0 +1,6 @@
+///>name byte マイナス結果表示
+/*** result
+(0,-2
+,)
+result ***/
+def main(){{var a:byte; var c:byte; a=2; c = -a; print_b(c)}}

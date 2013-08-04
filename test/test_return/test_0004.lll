@@ -1,0 +1,6 @@
+///>name fun return 1
+/*** result
+(0,1
+,)
+result ***/
+def a():long = {return 1;1+2;} def main():void = { print_l(a())}

@@ -1,0 +1,8 @@
+///>name var a:long a = 0 do { a += 1; print_l(a) } while (a < 3); 
+/*** result
+(0,1
+2
+3
+,)
+result ***/
+def main(){{var a:long a = 0 do { a = a + 1; print_l(a) } while(a < 3); }}

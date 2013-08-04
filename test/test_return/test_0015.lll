@@ -1,0 +1,6 @@
+///>name tail if a 2
+/*** result
+(0,2
+,)
+result ***/
+def main():void = { print_l(a()); } def a():long = {if(0)return 1; else 2;}

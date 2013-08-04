@@ -1,0 +1,6 @@
+///>name short and結果表示
+/*** result
+(0,2
+,)
+result ***/
+def main(){{var a:short; var b:short; var c:short; a=2; b = 3; c = a & b; print_s(c)}}

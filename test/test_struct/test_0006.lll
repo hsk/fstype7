@@ -1,0 +1,6 @@
+///>name 構造体のポインタ演算
+/*** result
+(0,10
+,)
+result ***/
+def main(){{ typedef ABC = struct{x:int y:int}  var a = new ABC a.x = 10 print_i(a->x)}}
