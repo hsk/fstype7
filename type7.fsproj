@@ -791,6 +791,9 @@
     <None Include="download\type7.tar.gz" />
     <None Include="history.md" />
     <None Include="todo.md" />
+    <None Include="test\test_global_var\test_0005.lll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Content Include="test\test_chars\test_0001.lll">

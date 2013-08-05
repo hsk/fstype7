@@ -55,14 +55,22 @@ let test file =
             
             let st = Compact.Parser.parse(src)
             let ast = Transduce.apply(st)
-            let ast2 = Typing.apply(ast)
+            let ast1 = Alpha.apply(ast)
+            let ast2 = Typing.apply(ast1)
             printfn "ast2 = %A" ast2
             let codes = KNormal.apply(ast2)
             let codes2 = ConstFold.apply(codes)
             printfn "%A" codes2
             LLEmit.apply("e.s", codes2)
-            printfn "%A" (Exec.run "llc -mcpu=x86-64 e.s")
-            printfn "%A" (Exec.run "llvm-gcc -m64 e.s.s -o e lib/stdio.c")
+            let cmp = (Exec.run "llc -mcpu=x86-64 e.s")
+            match cmp with
+            | (0,_,_) -> printfn "%A" cmp
+            | _ -> raise (Exception(sprintf "%A" cmp))
+            
+            let link = (Exec.run "llvm-gcc -m64 e.s.s -o e lib/stdio.c")
+            match link with
+            | (0,_,_) -> printfn "%A" link
+            | _ -> raise (Exception(sprintf "%A" link))
             let result =
                 match (Exec.run "./e") with
                 | (a,b,c) -> "("+a.ToString()+","+b.Replace("\r\n","\n").Replace("\r","\n")+","+c.Replace("\r\n","\n").Replace("\r","\n")+")"

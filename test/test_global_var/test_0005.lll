@@ -1,0 +1,26 @@
+///>name fun void
+/*** result
+(0,0
+1
+2
+3
+4
+5
+6
+7
+8
+9
+,)
+result ***/
+
+var particlesCnt:int = 10
+var particles:Array[int,10]
+
+def main(argc:int, argv:Ptr[Ptr[char]]) {
+    for(var i:int = 0; i < particlesCnt;i++) {
+        particles[i] = i
+    }
+    for(var i:int = 0; i < particlesCnt;i++) {
+        print_i(particles[i])
+    }
+}

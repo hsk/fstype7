@@ -81,13 +81,27 @@ let rec f(e: E, env: Map<string, string>): E * Map<string, string> =
             (ETuple(p, t, ls1), env1)
         | ETypeDef(p, t: T, id: string) -> (ETypeDef(p, t, id), env)
         //            case e : ECase -> throw new Exception("error")
-        | EArray(p,_, _, _) -> (e, env)
-        | EArrow(p,_, _, _, _) -> (e, env)
+        | EArray(p, t, a, b) ->
+            let (a1, env1) = f(a, env)
+            let (b1, env2) = f(b, env1)
+            (EArray(p,t,a1,b1), env)
+        | EArrow(p, t, t2, a, b) ->
+            let (a1, env1) = f(a, env)
+            (EArrow(p,t,t2, a1, b), env)
+        
         | EBreak(p,_) -> (e, env)
-        | ECase(p,_, _, _) -> (e, env)
-        | ECast(p,_, _) -> (e, env)
+        | ECase(p,t, a, b) ->
+            let (a1, env1) = f(a, env)
+            let (b1, env2) = f(b, env1)
+            (ECase(p,t,a1,b1), env)
+        | ECast(p,t, a) ->
+            let (a1, env1) = f(a, env)
+            (ECast(p,t,a1), env1)
         | EContinue(p,_) -> (e, env)
-        | EDo(p,_, _, _) -> (e, env)
+        | EDo(p,t, ls, a) ->
+            let (ls1, env1) = l(ls, env)
+            let (a1, env2) = f(a, env1)
+            (EDo(p, t, ls1, a1), env)
         | EFor(p, t, a, b, c, d) ->
             let (a1,env1) = f(a,env)
             let (b1,env2) = f(b,env1)
@@ -99,20 +113,46 @@ let rec f(e: E, env: Map<string, string>): E * Map<string, string> =
             (EFun(p,t,a,b,c1), env)
         | EGCNew(p,_) -> (e, env)
         | EGoto(p,_, _) -> (e, env)
-        | EIf(p,_, _, _, _) -> (e, env)
+        | EIf(p,t, a, b, c) ->
+            let (a1,env1) = f(a,env)
+            let (b1,env2) = f(b,env1)
+            let (c1,env3) = f(c,env1)
+            (EIf(p,t,a1,b1,c1), env)
+        
         | EImport(p,_) -> (e, env)
-        | ELabel(p,_, _, _) -> (e, env)
+        | ELabel(p,t, i, a) ->
+            let (a1,env1) = f(a,env)
+            (ELabel(p,t,i,a1), env)
         | ELdd(p,_, _) -> (e, env)
         | ELds(p,_, _) -> (e, env)
-        | ENeg(p,_, _) -> (e, env)
+        | ENeg(p, t, a) ->
+            let (a1,env1) = f(a,env)
+            (ENeg(p,t,a1), env)
+        
         | ENew(p,_) -> (e, env)
-        | ENewArray(p,_, _) -> (e, env)
-        | ENot(p,_, _) -> (e, env)
-        | EPtr(p,_, _) -> (e, env)
-        | ERef(p,_, _) -> (e, env)
-        | ERet(p,_, _) -> (e, env)
-        | ESizeOf(p,_, _, _) -> (e, env)
-        | EWhile(p,_, _, _) -> (e, env)
+        | ENewArray(p,t, a) ->
+            let (a1,env1) = f(a,env)
+            (ENewArray(p,t,a1), env)
+        | ENot(p,t,a) ->
+            let (a1,env1) = f(a,env)
+            (ENot(p,t,a1), env)
+        | EPtr(p,t,a) ->
+            let (a1,env1) = f(a,env)
+            (EPtr(p,t,a1), env)
+        | ERef(p,t, a) ->
+            let (a1,env1) = f(a,env)
+            (ERef(p,t,a1), env)
+        | ERet(p,t, a) ->
+            let (a1,env1) = f(a,env)
+            (ERet(p,t,a1), env)
+        | ESizeOf(p,t, t1, a) ->
+            let (a1,env1) = f(a,env)
+            (ESizeOf(p,t,t1,a1), env)
+        | EWhile(p,t, a, b) ->
+            let (a1,env1) = f(a,env)
+            let (b1,env2) = f(b,env1)
+            (EWhile(p,t,a1,b1), env)
+        
         | ENull(p) -> (e, env)
     // Console.Write(e.ToString()+"->"+rc.ToString())
     rc
