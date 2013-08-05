@@ -25,6 +25,7 @@
         <String>ConstFold.fs</String>
         <String>LLEmit.fs</String>
         <String>test/Test.fs</String>
+        <String>Regexp.fs</String>
         <String>Main.fs</String>
       </BuildOrder>
     </BuildOrder>
@@ -76,6 +77,7 @@
     <Compile Include="Exec.fs" />
     <Compile Include="Main.fs" />
     <Compile Include="test\Test.fs" />
+    <Compile Include="Regexp.fs" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\..\Microsoft F#\v4.0\Microsoft.FSharp.Targets" />
   <ItemGroup>

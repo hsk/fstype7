@@ -55,10 +55,23 @@ let getLCCOption(arch:string):string =
     | "x86-64" -> " -mattr=-avx"
     | _ -> ""
 
+let mutable tim = 0L
+
+let benchStart () = 
+    tim <- System.DateTime.Now.Ticks
+(**
+ * bench mark
+ *)
+let bench (str:string):unit =
+    let t = System.DateTime.Now.Ticks
+    let rc = (t - tim) / 10000L
+    printfn "%s %d ms" str rc
+    tim <- t
 (**
  * コンパイル
  *)
 let comp(sname:string, opt:Opts, src:string) =
+    benchStart ()
     GlobalEnv.init()
     Env.init([])
     // パース
@@ -66,25 +79,32 @@ let comp(sname:string, opt:Opts, src:string) =
         match opt.p with
         | false ->
             let st = Compact.parse(src)
+            bench "parse"
             if (debug) then
                 printfn "st=%A" st
             Transduce.apply(st)
         | true -> raise(Exception("not support"))// parser.parse(src).get
+    bench "transduce"
 
     if (debug) then
         printfn "ast=%A" ast
 
     // 型付け
     let ast2 = Alpha.apply(ast)
+    bench "alpha"
     let tast = Typing.apply(ast2)
+    bench "typing"
     if (debug) then
         printfn "tast=%A" tast
     
     let lname = Regex(".s$").Replace(sname, ".ll")
 
     let llcodes = KNormal.apply(tast)
+    bench "k normal"
     let llcodes2 = ConstFold.apply(llcodes)
+    bench "const fold"
     LLEmit.apply(lname, llcodes2)
+    bench "emit"
     let opt1 = getLCCOption(opt.arch)
     let cmd = "llc -march="+opt.arch+" "+lname+ " -o " + sname + opt1
     if (debug) then
@@ -264,10 +284,55 @@ let main2 (args:string []):int =
         printfn "%A" e
         1
 
+type LexV =
+|   Sym
+|   Num
+
 [<EntryPoint>]
 let main(args:string []):int =
     // test_main args
     // main1 args
     // main2 args
     main2 ("sample/opengl.lll sample/program.lll -run -framework OpenGL -framework glut".Split(' '))
+    //main2 ("sample/opengl.lll sample/shoot.lll -run -framework OpenGL -framework glut".Split(' '))
+    (*
+    let mms =
+        [
+            Sym,"([a-z]+)",1;
+            Num,"(([0-9]+))",2;
+        ]
+    let regex = Regex("^"+String.Join("|", List.map (function|(a,b,c)-> b) mms) )
+    
+    let (_,ms) = List.fold (fun (n,l) (a,b,c)->(c+n,(a,c,c+n)::l)) (0,[]) mms
+
+            
+    let (|Reg|_|) (regex:Regex) str =
+        let m:Match = regex.Match(str)
+        if not m.Success then
+            None
+        else
+            let groups = [| for x in m.Groups -> x.Value |]
+            let rec getno (groups:string []) ms =
+                match ms with
+                | (sym,st:int,en)::ms ->
+                    if (groups.[st] <> "") then
+                        let rec getlist i st (groups: string []) ls =
+                            if (i < st) then ls
+                            else getlist (i-1) st groups ((groups.[i])::ls)
+                        Some (sym, getlist en st groups [groups.[0]])
+                    else
+                        getno groups ms
+            getno groups ms
+           
+    let m = regex.Match("abc")
+    printfn "%A" m.Groups
+    let m = regex.Match("123")
+    printfn "%A" m.Groups
+    
+    match "12345" with
+    | Reg regex (Num, m) -> printfn "num %A" m
+    | Reg regex (Sym, m) -> printfn "sym %A" m
+    0
+    *)
+    
     

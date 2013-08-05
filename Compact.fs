@@ -209,19 +209,39 @@ module Parser =
                             ";", OIe(3)
                             ])
 
-    let com1 = Regex("""^(//[^\r\n]*)(\r\n|\r|\n|)(.*$)""",RegexOptions.Singleline)
-    let com = Regex("""^(/\*.*?\*/)(.*$)""",RegexOptions.Singleline)
-    let xnum = Regex("""^(0x)([0-9A-Fa-f]+)(L?)(.*$)""",RegexOptions.Singleline)
-    let num = Regex("""^([0-9]+)(L?)(.*$)""",RegexOptions.Singleline)
-    let dnum = Regex("""^([0-9]+\.[0-9]*)(.*$)""",RegexOptions.Singleline)
-    let sym = Regex("""^(')([^-\+*\/\(\)\[\]\{\}\s\=\;\:<>,\&\.%!]+)(.*$)""",RegexOptions.Singleline)
-    let ptn = Regex("""^([-\+*\/\=<>&!]+|[\(\)\[\]\{\},\.%?]|[^-\+*\/\(\)\[\]\{\}\s\=\;\:<>,\&\.%!?]+|$)(.*$)""",RegexOptions.Singleline)
-    let eol = Regex("""^([;:])(.*$)""",RegexOptions.Singleline)
-    let spc1 = Regex("""^(\r\n|\r|\n)(.*$)""",RegexOptions.Singleline)
-    let spc = Regex("""^([\s]+)(.*$)""",RegexOptions.Singleline)
-    let str1 = Regex("""^("(\\.|[^"\\]*)*")(.*$)""",RegexOptions.Singleline)
-    let eof = Regex("""^[\s]*($)""",RegexOptions.Singleline)
+    type LexV =
+    | LCom
+    | LCom1
+    | LEol
+    | LSym
+    | LDNum
+    | LXNum
+    | LNum
+    | LStr1
+    | LPtn
+    | LSpc1
+    | LSpc
+    | LEof
 
+    let mms =
+        [
+            LCom,"""(/\*.*?\*/)""",1;
+            LCom1,"""(//[^\r\n]*)(\r\n|\r|\n|)""",2;
+            LEol,"""([;:])""",1;
+            LSym,"""(')([^-\+*\/\(\)\[\]\{\}\s\=\;\:<>,\&\.%!]+)""",2;
+            LDNum,"""([0-9]+\.[0-9]*)""",1;
+            LXNum,"""(0x)([0-9A-Fa-f]+)(L?)""",3;
+            LNum,"""([0-9]+)(L?)""",2;
+            LStr1,"""("(\\.|[^"\\]*)*")""",2;
+            LPtn,"""([-\+*\/\=<>&!]+|[\(\)\[\]\{\},\.%?]|[^-\+*\/\(\)\[\]\{\}\s\=\;\:<>,\&\.%!?]+|$)""",1;
+            LSpc1,"""(\r\n|\r|\n)""",1;
+            LSpc,"""([\s]+)""",1;
+            LEof,"""((\r\n|\r|\n|\s)*$)""",2;
+        ]
+    let regex = Regex("^"+String.Join("|", List.map (function|(a,b,c)-> b) mms), RegexOptions.Singleline )
+    
+    let (_,ms1) = List.fold (fun (n,l) (a,b,c)->(c+n,(a,n,c+n-1)::l)) (1,[]) mms
+    let ms = List.rev ms1
     let mutable connectf = true
     let mutable str = ""
     let mutable token: Token = TNull(P0)
@@ -245,17 +265,30 @@ module Parser =
             ptoken <- token
             connectf <- true
             let rec t():unit =
-                let setToken(s:string,t: Token, e:String):unit =
+                let setToken(s:int,t: Token):unit =
     //                t.pos = new Pos(src, offset)
-                    offset <- offset + s.Length
+                    offset <- offset + s
                     token <- t
-                    str <- e
-
-                let (|Reg|_|) (regex:Regex) str =
-                   let m = regex.Match(str)
-                   if m.Success
-                   then Some (List.tail [ for x in m.Groups -> x.Value ])
-                   else None
+                    str <- str.Substring(s)
+            
+                let reg str =
+                    let m:Match = regex.Match(str)
+                    if not m.Success then
+                        None
+                    else
+                        let groups = [| for x in m.Groups -> x.Value |]
+                        let rec getno (groups:string []) ms =
+                            match ms with
+                            | (sym,st:int,en)::ms ->
+                                if (groups.[st] <> "") then
+                                    let rec getlist i st (groups: string []) ls =
+                                        if (i < st) then ls
+                                        else getlist (i-1) st groups ((groups.[i])::ls)
+                                    Some (sym, groups.[0]::(getlist en st groups []))
+                                else
+                                    getno groups ms
+                            | [] -> Some(LEof,["";"";""])
+                        getno groups ms
 
                 let replaceStr(e:string):string =
                     //println("e='"+e+"'")
@@ -270,28 +303,28 @@ module Parser =
                     //    """\\u([0-9a-fA-F]{4})""".r.replaceAllIn(e2, m -> String.valueOf(Integer.parseInt(m.group(1), 16)) )
                     //println("e2='"+e2+"'")
                     e2
-                match str with
-                | Reg com [a; e] ->
-                    str <- e
-                    offset <- offset + a.Length
+                match reg str with
+                | Some(LCom,[o; a]) ->
+                    str <- str.Substring(o.Length)
+                    offset <- offset + o.Length
                     t()
-                | Reg com1 [a; b; e] ->
-                    str <- e
-                    offset <- offset + a.Length + b.Length
+                | Some(LCom1, [o; a; b]) ->
+                    str <- str.Substring(o.Length)
+                    offset <- offset + o.Length
                     t()
-                | Reg eol [a; e] ->
+                | Some(LEol, [o; a]) ->
                     connectf <- false
-                    setToken(a,Id(pos(), a),e)
-                | Reg eof [e] -> setToken(e,Id(pos(), ""), "")
-                | Reg sym [a; b; e] -> setToken(a+b,Sym(pos(), b), e)
-                | Reg dnum [a; e] -> setToken(a,Dbl(pos(), Convert.ToDouble(a)), e)
-                | Reg xnum [a; b; c; e] -> setToken(a+b+c,Lng(pos(), Convert.ToInt64(b,16)), e)
-                | Reg num [a; b; e] -> setToken(a+b,Lng(pos(), Convert.ToInt64(a)), e)
-                | Reg str1 [a; b; e] -> str <- e; setToken(a, Str(pos(), replaceStr(a)), e)
-                | Reg ptn [a; e] -> setToken(a,Id(pos(), a), e)
-                | Reg spc1 [a; e] -> str <- e; connectf <- false; offset<- offset + a.Length; t()
-                | Reg spc [a; e] -> str <- e; offset<- offset + a.Length; t()
-                | _ -> raise(Exception ("error " + str))
+                    setToken(o.Length,Id(pos(), a))
+                | Some(LSym, [o; a; b]) -> setToken(o.Length,Sym(pos(), b))
+                | Some(LDNum, [o; a]) -> setToken(o.Length,Dbl(pos(), Convert.ToDouble(a)))
+                | Some(LXNum, [o; a; b; c]) -> setToken(o.Length,Lng(pos(), Convert.ToInt64(b,16)))
+                | Some(LNum, [o; a; b]) -> setToken(o.Length,Lng(pos(), Convert.ToInt64(a)))
+                | Some(LStr1, [o; a; b]) -> setToken(o.Length, Str(pos(), replaceStr(a)))
+                | Some(LPtn, [o; a]) -> setToken(o.Length,Id(pos(), a))
+                | Some(LSpc1, [o; a]) -> str <- str.Substring(o.Length); connectf <- false; offset<- offset + o.Length; t()
+                | Some(LSpc, [o; a]) -> str <- str.Substring(o.Length); offset<- offset + o.Length; t()
+                | Some(LEof, [o; a; b]) -> setToken(0,Id(pos(), ""))
+                | _ -> raise(Exception ("error '" + str + "'"))
             t()
             ptoken
         lex() |> ignore
