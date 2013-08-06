@@ -3,4 +3,7 @@
 (0,30
 ,)
 result ***/
-def main(){{print_b(10 + 20)}}
+
+def main() {
+	print_b(10 + 20)
+}

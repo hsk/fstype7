@@ -4,4 +4,14 @@
 20
 ,)
 result ***/
-def a(n:int) { print_i(n) } def main() { a(10); var ccc:(int)=>void; ccc= a; ccc(20);}
+
+def a(n:int) {
+	print_i(n)
+}
+
+def main() {
+	a(10);
+	var ccc:(int)=>void;
+	ccc= a;
+	ccc(20);
+}

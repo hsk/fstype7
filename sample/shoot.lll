@@ -44,16 +44,18 @@ var fullscreen:int = 0
     right:int
     space:int
     shot:int
+    start:int
   }
   var key:Key
 
   def downKey(k:byte, x:int, y:int) {
+  	println("downkey")
     k is {
       GLUT_KEY_UP? key.up = 1 break
       GLUT_KEY_DOWN? key.down = 1 break
       GLUT_KEY_LEFT? key.left = 1 break
-      GLUT_KEY_RIGHT? key.right = 1 break
-      GLUT_KEY_SPACE? key.shot = key.space = 1 break
+      GLUT_KEY_RIGHT?   	println("right") key.right = 1 break
+      GLUT_KEY_SPACE? key.start = key.shot = key.space = 1 break
     }
   }
   def upKey(k:byte, x:int, y:int) {
@@ -62,7 +64,7 @@ var fullscreen:int = 0
       GLUT_KEY_DOWN? key.down = 0 break
       GLUT_KEY_LEFT? key.left = 0 break
       GLUT_KEY_RIGHT? key.right = 0 break
-      GLUT_KEY_SPACE? key.shot = key.space = 0 break
+      GLUT_KEY_SPACE? key.start = key.shot = key.space = 0 break
       27? glutLeaveGameMode() exit(0) break
     }
   }
@@ -85,13 +87,15 @@ var randomValue:int = 1143241
 
 
 def main(argc:int, argv:Ptr[Ptr[char]]) {
-    ship = newShip(230.0, 450.0)
+    ship = newShip(0.0, 0.0)
     Ship_init(ship)
+    
+    gameover = new GameOver
+    
 /*
     gameover.text = "GAME OVER";
     gameover.y = 200;
     gameover.x = 200;
-    addChild(gameover);
 */
     for(var i:int = 0; i < bulletsCnt;i++) {
         bullets[i] = newBullet()
@@ -99,9 +103,6 @@ def main(argc:int, argv:Ptr[Ptr[char]]) {
 
     for(var i:int = 0; i < particlesCnt;i++) {
         particles[i] = newParticle()
-    }
-    for(var i:int = 0; i < particlesCnt;i++) {
-        print_l(cast(long)particles[i])
     }
     for(i = 0; i < shotsCnt;i++) {
         shots[i] = newShot()
@@ -112,35 +113,34 @@ def main(argc:int, argv:Ptr[Ptr[char]]) {
 
 //            txt.width = 100;
 //            txt.height = 100;
-//            addChild(ship);
-//            addChild(txt);
 
-  glutInit(&argc, argv)
-  glutInitWindowSize(640, 480)
-  if (0) {
-    glutGameModeString("640x480:32@60")
-    glutEnterGameMode()
-  } else {
-    glutCreateWindow(argv[0])
-  }
-  //  glutFullScreen()
-  glutInitDisplayMode(GLUT_RGBA)
-  //glEnable(GL_DEPTH_TEST)
-  glEnable(GL_BLEND)
-  glEnable(GL_LIGHTING)
-  glEnable(GL_LIGHT0)
+  	glutInit(&argc, argv)
+  	glutInitWindowSize(640, 480)
+  	if (0) {
+    	glutGameModeString("640x480:32@60")
+    	glutEnterGameMode()
+  	} else {
+    	glutCreateWindow(argv[0])
+  	}
+  	//  glutFullScreen()
+  	glutInitDisplayMode(GLUT_RGBA)
+  	//glEnable(GL_DEPTH_TEST)
+  	glEnable(GL_BLEND)
+  	glEnable(GL_LIGHTING)
+  	glEnable(GL_LIGHT0)
   
-  glutDisplayFunc(main_display)
-  glutTimerFunc(20, main_loop, 0)
+  	glutDisplayFunc(main_display)
+  	glutTimerFunc(20, main_loop, 0)
 
-  glutSpecialFunc(downKey)
-  glutSpecialUpFunc(upKey)
-  glutMainLoop()
+  	glutSpecialFunc(downKey)
+  	glutSpecialUpFunc(upKey)
+  	glutMainLoop()
 }
 
 def main_loop(a:int) {
   onEnter()
-  glutTimerFunc(1000/50 , main_loop , 0)
+  glutPostRedisplay()
+  glutTimerFunc(20 , main_loop , 0)
 }
 
 def random():double = {
@@ -154,11 +154,9 @@ def random():double = {
 }
 
 def onEnter() {
-    
     var cnt = 0
-    var enemy:Ptr[Enemy]
     for (var i = 0; i < enemiesCnt; i++) {
-        enemy = enemies[i]
+	    var enemy = enemies[i]
         if (enemy.visible) {
             cnt++
             enemy.move(enemy)
@@ -174,14 +172,14 @@ def onEnter() {
         }
     }
 
-    /*
+    
     if(gameover.visible && key.start) {
         score = 0
         rank = 1
         gameover.visible = false
-        Ship_init(&ship)
+        Ship_init(ship)
     }
-    */
+
     if(ship.visible)Ship_move(ship)
 
     for (i = 0; i < bulletsCnt; i++) {
@@ -201,7 +199,7 @@ def onEnter() {
         var s = shots[i]
         if (s.visible) {
             for (var j = 0; j < enemiesCnt; j++) {
-                enemy = enemies[j]
+                var enemy = enemies[j]
                 if(enemy.visible && abs(enemy.x - s.x) < 30 && abs(enemy.y - s.y) < 30) {
                     score += 100
                     rank = score / 1000
@@ -217,40 +215,76 @@ def onEnter() {
 //        print_l(cast(long)p)
 //        print_l(i)
 //        print_i(p.visible)
-//        if(p.visible) Particle_move(p)
+        if(p.visible) Particle_move(p)
     }
 //    txt.text = "SCORE "+score;
 }
+
+def glFrustum(a:double,b:double,c:double,d:double,e:double,f:double):void
+
 def main_display() {
-  var WIDTH:int = 640
-  var HEIGHT:int = 480
+  	var WIDTH:int = 640
+  	var HEIGHT:int = 480
   
-  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-  glViewport(0, 0, 640, 480)
+  	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+  	glViewport(0, 0, 640, 480)
 
-  glMatrixMode(GL_PROJECTION)
-  glLoadIdentity()
+  	glMatrixMode(GL_PROJECTION)
+  	glLoadIdentity()
 
-  //視野角,アスペクト比(ウィンドウの幅/高さ),描画する範囲(最も近い距離,最も遠い距離)
-  gluPerspective(90.0, cast(double)WIDTH / cast(double)HEIGHT, 1.0, 10000.0)
- // ライトの設定
- var n:float = 10.0
- var lightpos:Array[float,4]
+  	//視野角,アスペクト比(ウィンドウの幅/高さ),描画する範囲(最も近い距離,最も遠い距離)
+  	gluPerspective(90.0, cast(double)WIDTH / cast(double)HEIGHT, 1.0, 10000.0)
+// 	glFrustum(-1*cast(double)WIDTH, cast(double)WIDTH * 1.0, cast(double)HEIGHT * 1.0, cast(double)HEIGHT * -0.5, cast(double)HEIGHT, 100000.0);
+ 	// ライトの設定
+ 	var n:float = 10.0
+ 	var lightpos:Array[float,4]
 
- lightpos[0] = 500.0 * n
- lightpos[1] = 802.0 * n
- lightpos[2] = 505.0 * n
- lightpos[3] = 1.0
-  glLightfv(GL_LIGHT0, GL_POSITION, cast(Ptr[float])lightpos)
+ 	lightpos[0] = 500.0 * n
+ 	lightpos[1] = 802.0 * n
+ 	lightpos[2] = 505.0 * n
+ 	lightpos[3] = 1.0
+  	glLightfv(GL_LIGHT0, GL_POSITION, cast(Ptr[float])lightpos)
 
-  glMatrixMode(GL_MODELVIEW)
-  glLoadIdentity()
-  glBlendFunc(GL_SRC_ALPHA, GL_ONE)
-  gluLookAt(0.0,0.0,320.0, //カメラの座標
-    0.0,0.0,0.0, // 注視点の座標
-    0.0,1.0,0.0) // 画面の上方向を指すベクトル 
+  	glMatrixMode(GL_MODELVIEW)
+  	glLoadIdentity()
+  	glBlendFunc(GL_SRC_ALPHA, GL_ONE)
+  	gluLookAt(0.0,0.0,320.0, //カメラの座標
+    	0.0,0.0,0.0, // 注視点の座標
+    	0.0,1.0,0.0) // 画面の上方向を指すベクトル 
+    	
  
-  glFlush()
+    for (var i = 0; i < enemiesCnt; i++) {
+	    var enemy = enemies[i]
+        if (enemy.visible) {
+            Enemy_draw(enemy)
+        }
+    }
+
+
+    if(gameover.visible) {
+    }
+
+    if(ship.visible)Ship_draw(ship)
+
+    for (i = 0; i < bulletsCnt; i++) {
+        var b = bullets[i]
+        if(b.visible) {
+            Bullet_draw(b)
+        }
+    }
+
+    for (i = 0; i < shotsCnt; i++) {
+        var s = shots[i]
+        if (s.visible) {
+            Shot_draw(s)
+        }
+    }
+    for (i = 0; i < particlesCnt; i++) {
+        var p = particles[i]
+        if(p.visible) Particle_draw(p)
+    }
+   
+  	glFlush()
 }
 
 def addParticles(x:double, y:double, n:int) {
@@ -301,6 +335,11 @@ def addEnemy(x:double, y:double, rad:double) {
         return
     }
 }
+typedef GameOver = struct {
+    visible:bool
+}
+
+var gameover:Ptr[GameOver]
 
 typedef Ship = struct {
 
@@ -314,13 +353,34 @@ typedef Ship = struct {
 
 def newShip(x:double, y:double):Ptr[Ship] = {
   var this = new Ship
-  this.speed = 5
+  this.speed = 5.0
   this.x = x
   this.y = y
   this
 }
 
+def color(r:float,g:float,b:float,a:float) {
+  var col = Array(r,g,b,a)
+  glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, col)
+}
+
 def Ship_draw(ship:Ptr[Ship]) {
+	
+    glPushMatrix() 
+    glTranslated(ship.x, ship.y, 0.0)
+
+    var x = 15.0
+    var y = 30.0
+    glBegin(GL_POLYGON)
+      color(1.0,0.275,0.275,1.0)
+      glNormal3d(0.0,0.0,1.0)
+      glVertex3d(-x,y,0.0)
+      glVertex3d(x,y,0.0)
+      glVertex3d(x,-y,0.0)
+      glVertex3d(-x,-y,0.0)
+    glEnd()
+    glPopMatrix() 
+
 //        graphics.beginFill(0xffff0000);
 //        graphics.drawRect(-5,-5,10,10);
 //        graphics.endFill();
@@ -333,15 +393,21 @@ def Ship_init(this:Ptr[Ship]) {
 }
 
 def Ship_move(this:Ptr[Ship]) {
-  this.timer++
-  if(this.timer > 300) this.exists = true
-  if(key.shot)addShot(this.x, this.y, -PI / 2)
-  if(key.left)this.x -= this.speed
-  if(key.right)this.x += this.speed
-  if(key.up)this.y -= this.speed
-  if(key.down)this.y += this.speed
-  if(this.x < 0) this.x = 5 else if(this.x > 465) this.x = 465 - 5
-  if(this.y < 0) this.y = 5 else if(this.y > 465) this.y = 465 - 5
+  	this.timer++
+  	var x = this.x
+  
+	if(this.timer > 300) this.exists = true
+	if(key.shot)addShot(this.x, this.y, -PI / 2)
+	if(key.left)this.x -= this.speed
+	if(key.right)this.x += this.speed
+	if(key.up)this.y -= this.speed
+	if(key.down)this.y += this.speed
+	if(this.x < 0) this.x = 5 else if(this.x > 465) this.x = 465 - 5
+	if(this.y < 0) this.y = 5 else if(this.y > 465) this.y = 465 - 5
+	
+	if(x != this.x) print_d(this.x)
+	  	  
+  
 }
 
 typedef Enemy = struct {

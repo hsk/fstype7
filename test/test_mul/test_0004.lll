@@ -3,4 +3,13 @@
 (0,6
 ,)
 result ***/
-def main(){{var a:long; var b:long; var c:long; a=2; b = 3; c = a * b; print_l(c)}}
+
+def main() {
+	var a:long;
+	var b:long;
+	var c:long;
+	a=2;
+	b = 3;
+	c = a * b;
+	print_l(c)
+}

@@ -3,4 +3,10 @@
 (0,1
 ,)
 result ***/
-var a:int[10] def main() {a[9]=1;print_i(a[9]);}
+
+var a:int[10]
+
+def main() {
+	a[9] = 1;
+	print_i(a[9]);
+}

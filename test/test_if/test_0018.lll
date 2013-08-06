@@ -3,4 +3,11 @@
 (0,0
 ,)
 result ***/
-def main(){{var a:long a = 0 goto bbb; a = 1; bbb: print_l(a) }}
+def main() {
+	var a:long
+	a = 0
+	goto bbb;
+	a = 1;
+bbb:
+	print_l(a)
+}

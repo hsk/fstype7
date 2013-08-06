@@ -3,8 +3,8 @@
 (0,,)
 result ***/
 
-        def init(a:Ptr[int]) {}
-        def main(argc:int, argv:Ptr[Ptr[char]]) {
-          init(&argc)
-        }
+def init(a:Ptr[int]) {}
 
+def main(argc:int, argv:Ptr[Ptr[char]]) {
+	init(&argc)
+}

@@ -3,4 +3,14 @@
 (0,12.500000
 ,)
 result ***/
-def main(){{ var a:float; var b:float; var c:float;var p:*float; p = &c; a = 12.5; p = p + 2; print_f(p[0]) }}
+
+def main() {
+	var a:float;
+	var b:float;
+	var c:float;
+	var p:*float;
+	p = &c;
+	a = 12.5;
+	p = p + 2;
+	print_f(p[0])
+}

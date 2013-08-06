@@ -3,4 +3,7 @@
 (0,30
 ,)
 result ***/
-def main(){{print_l(10L + 20L)}}
+
+def main() {
+	print_l(10L + 20L)
+}

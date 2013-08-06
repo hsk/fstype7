@@ -3,4 +3,6 @@
 (0,2.000000
 ,)
 result ***/
-def main():void = print_d(inc(1.0));def inc(a:double):double = a + 1.0
+
+def main():void = print_d(inc(1.0));
+def inc(a:double):double = a + 1.0

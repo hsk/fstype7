@@ -3,4 +3,9 @@
 (0,1
 ,)
 result ***/
-var a=1; def main() {print_l(a);}
+
+var a=1;
+
+def main() {
+	print_l(a);
+}

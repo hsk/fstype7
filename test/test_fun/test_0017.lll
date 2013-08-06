@@ -5,4 +5,26 @@
 3
 ,)
 result ***/
-typedef HOGE = struct{a:int b:int} def main():void = {typedef HOGE = struct{a:int b:int c:int} var a:HOGE a.a = 1; a.b = 2; a.c = 3; print_i(a.a); print_i(a.b); print_i(a.c)}
+
+typedef HOGE = struct{
+	a:int
+	b:int
+}
+
+def main():void = {
+
+	typedef HOGE = struct{
+		a:int
+		b:int
+		c:int
+	}
+
+	var a:HOGE
+	a.a = 1;
+	a.b = 2;
+	a.c = 3;
+
+	print_i(a.a);
+	print_i(a.b);
+	print_i(a.c)
+}

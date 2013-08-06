@@ -80,7 +80,6 @@ let rec f(e: E, env: Map<string, string>): E * Map<string, string> =
             let (ls1, env1) = l(ls, env)
             (ETuple(p, t, ls1), env1)
         | ETypeDef(p, t: T, id: string) -> (ETypeDef(p, t, id), env)
-        //            case e : ECase -> throw new Exception("error")
         | EArray(p, t, a, b) ->
             let (a1, env1) = f(a, env)
             let (b1, env2) = f(b, env1)

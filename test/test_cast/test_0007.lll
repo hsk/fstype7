@@ -3,4 +3,11 @@
 (0,1
 ,)
 result ***/
-def main(){{ var a:byte var b:long a = 255 b = 2 a = cast(byte)b + a; print_b(a)}}
+def main() {
+	var a:byte
+	var b:long
+	a = 255
+	b = 2
+	a = cast(byte)b + a
+	print_b(a)
+}

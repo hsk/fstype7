@@ -3,4 +3,15 @@
 (0,2
 ,)
 result ***/
-def main(){{switch(2) {case 1: print_l(1); break; case 2: print_l(2); break;default: print_l(0) } }}
+def main() {
+	switch (2) {
+	case 1:
+		print_l(1);
+		break;
+	case 2:
+		print_l(2);
+		break;
+	default:
+		print_l(0)
+	}
+}

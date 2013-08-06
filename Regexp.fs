@@ -28,7 +28,7 @@ module PostOfRegEx =
         let eat (regex:string):string =
             match str with
             | Reg regex [o] -> str.Substring(o.Length)
-            
+            | _ -> raise(System.Exception(sprintf "expected is %s but found %s" regex (str.Substring(0,1))))
         let rec expr():string =
             conc() + expr_tail()
         and expr_tail():string =

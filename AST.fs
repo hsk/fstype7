@@ -2,6 +2,98 @@ module AST
 
 open System
 
+type P(src:string, no:int) =
+    member this.no
+        with get() = no
+    override this.ToString():string = this.p()
+    
+    member this.p():string =
+        let rec getLineNo(start:int, line:int):string =
+            let index = src.IndexOf('\n', start)
+            if (index < 0) then
+                "EOF"
+            else if (index >= this.no) then
+                "(" + line.ToString() + ")"
+            else
+                getLineNo(index+1, line + 1)
+        getLineNo(0, 1)
+
+let P0 = P("", 0)
+
+(**
+ * 型エラー
+ *)
+exception TypeError of int * P * string
+// 3000 - typing error
+// 3001
+// 3002
+// 3003
+// 3004
+// 3005
+// 3006
+// 3007
+// 3008
+// 3009
+// 3010
+// 3011
+// 3012
+// 3013
+// 3014
+// 3015
+// 3016
+// 3017
+// 3018
+// 3019
+// 3020
+// 3021
+// 3022
+// 3023
+// 3024
+// 3025
+// 3026
+// 3027
+// 3028
+// 3029
+// 3030
+// 3031
+// 3032
+// 3033
+// 3034
+// 3035
+// 3036
+// 3037
+// 3038
+// 3039
+// 3040
+// 3500 - AST
+// 3501 ttos error
+// 3502 tName error
+// 3503 tName error
+// 3504 tName error
+// 3505 tName error
+// 3506 stripType error
+// 3600 - global env
+// 3601 global env error
+// 3700 - env
+// 3701 env error
+// 3702 env error
+// 3703 env error
+// 3704 size calculate error
+// 4000 - knormal
+// 4001 transAssign error
+// 4002
+// 4003
+// 4004
+// 4005
+// 4006
+// 4007
+// 4008
+// 4009
+// 4010
+// 5000 LLEmit error
+// 5001 LLUnary error
+// 5002 LLAssign error
+
 (**
  * 型
  *)
@@ -30,25 +122,6 @@ type T =
     | TDef of string
     (** 関数型 *)
     | TFun of T * T list
-
-type P(src:string, no:int) =
-    member this.no
-        with get() = no
-    override this.ToString():string = this.p()
-    
-    member this.p():string =
-        let rec getLineNo(start:int, line:int):string =
-            let index = src.IndexOf('\n', start)
-            if (index < 0) then
-                "EOF"
-            else if (index >= this.no) then
-                "(" + line.ToString() + ")"
-            else
-                getLineNo(index+1, line + 1)
-        getLineNo(0, 1)
-
-let P0 = P("", 0)
-
 
 (**
  * 抽象構文木
@@ -356,7 +429,7 @@ type T with
         | TDef(id: String)-> id
         | TFun(t, prms)->
             "(" + System.String.Join(", ", List.map (fun (t:T) -> t.ttos) prms) + ")->" + t.ttos
-        | _-> raise (Exception("error type " + this.tName))
+        | _-> raise (TypeError(3501, P0, "error type " + this.tName))
 
     (**
      * 1文字表現で型を文字列化します
@@ -367,10 +440,12 @@ type T with
         | Ti(16)-> "s"
         | Ti(32)-> "i"
         | Ti(64)-> "l"
+        | Ti(n) -> raise(TypeError(3502, P0, sprintf "i%d is not support type" n))
         | Tu(8)-> "c"
         | Tu(16)-> "w"
         | Tu(32)-> "u"
         | Tu(64)-> "q"
+        | Tu(n) -> raise(TypeError(3503, P0, sprintf "u%d is not support type" n))
         | Tf-> "f"
         | Td-> "d"
         | TDef(id)-> T.find(id).tName
@@ -379,25 +454,26 @@ type T with
         | TFun _ -> "p"
         | Tp _ -> "a"
         | Tr _ -> "a"
-        | _-> raise(Exception("a " + this.ttos))
+        | Tn -> raise(TypeError(3504, P0, sprintf "Tn is not support type"))
+        | Tv -> raise(TypeError(3505, P0, sprintf "Tv is not support type"))
     (**
      * 型のTDefを消し、生のデータを返します。
      * 
      * ただし、再帰的な型名があった場合はそのままの型名で返却します。
      * さもないと、無限ループしてしまいます。
      *)
-    member this.stripType(set:string list):T =
+    member this.stripType(p:P, set:string list):T =
         match this with
         | TDef(id) ->
             if (set |> List.tryFindIndex (fun i -> i=id)) <> None then this
             else
                 try
-                    T.find(id).stripType(id :: set)
+                    T.find(id).stripType(p, id :: set)
                 with
-                | _ -> raise(Exception ("not found typename "+id))
-        | TStr(m) -> TStr(List.map (fun (id,t:T)->(id, t.stripType(set))) m)
-        | TArr(t1, size) -> TArr(t1.stripType(set), size)
-        | Tp(t1) -> Tp(t1.stripType(set))
+                | _ -> raise(TypeError(3506, p, "not found typename "+id))
+        | TStr(m) -> TStr(List.map (fun (id,t:T)->(id, t.stripType(p, set))) m)
+        | TArr(t1, size) -> TArr(t1.stripType(p, set), size)
+        | Tp(t1) -> Tp(t1.stripType(p, set))
         | _ -> this
     (**
      * 型をLLVM用に出力
@@ -416,7 +492,7 @@ type T with
         | TArr(t, size) -> sprintf "[%d x %s]" size (t.p)
         | Tr(t) -> t.p
         | Tp(t) -> t.p + "*"
-        | TDef _ -> this.stripType([]).p
+        | TDef _ -> this.stripType(P0, []).p
         | TStr ls ->
             match (List.tryFind (fun (t,r) -> t=this) structs) with
             | None ->

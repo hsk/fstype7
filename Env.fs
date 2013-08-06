@@ -58,7 +58,7 @@ let findR(id: string):R =
         try
             RG(GlobalEnv.mapfind(id),id)
         with
-        | e -> raise(Exception("not found "+id))
+        | e -> raise(TypeError(3701, P0, "not found "+id))
 
 (**
  * 型定義追加
@@ -70,11 +70,11 @@ let getFieldNo(id: string, field: string):int =
     | TStr(m) ->
         let rec getNo(no:int, m:(string * T) list):int =
             match m with
-            | [] -> raise (Exception ("not found " + field))
+            | [] -> raise (TypeError(3702, P0, "not found " + field))
             | (name,t)::xs when (name = field) -> no
             | x::xs -> getNo(no + 1, xs)
         getNo(0, m)
-    | _ -> raise(Exception("error"))
+    | _ -> raise(TypeError(3703, P0, "error"))
 
 (**
  * 型の追加
@@ -98,4 +98,4 @@ let rec size(t: T): int64 =
     | TStr(m) -> List.fold (fun a (t, b) -> a + size(b)) 0L m
     | TFun _ -> 8L
     | Tn -> -1L
-    | _ -> raise(Exception "error")
+    | _ -> raise(TypeError(3704, P0, "size calculate error"))

@@ -3,4 +3,6 @@
 (0,640x480:32@60
 ,)
 result ***/
-def main(){{println("640x480:32@60")}}
+def main() {
+	println("640x480:32@60")
+}

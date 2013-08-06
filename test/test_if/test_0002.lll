@@ -2,4 +2,9 @@
 /*** result
 (0,,)
 result ***/
-def main(){{var a:long; a = 0; if(a)print_l(1)}}
+
+def main() {
+	var a:long;
+	a = 0;
+	if(a)print_l(1)
+}

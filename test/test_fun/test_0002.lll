@@ -8,11 +8,14 @@ def main() {
 }
 
 def b(a1:Ptr[A],a:(int)=>void) {
-	a1.m= a a1.m(20)
+	a1.m = a
+	a1.m(20)
 }
+
 typedef A=struct {
-	m:(int)=>void
+	m:(int) => void
 }
+
 def a(n:int) {
 	print_i(n)
 }

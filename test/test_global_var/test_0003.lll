@@ -4,15 +4,17 @@
 ,)
 result ***/
 
-  typedef Game = struct {
-    move:(Ptr[Game])=>void
-  }
-  var game:Game
-          def Game_title(game:*Game) {
-        print_i(10);
-  } 
-        def main() {
-          game.move = Game_title
-          game.move(&game)
-        }
+typedef Game = struct {
+	move:(Ptr[Game])=>void
+}
 
+var game:Game
+
+def Game_title(game:*Game) {
+	print_i(10);
+} 
+
+def main() {
+	game.move = Game_title
+	game.move(&game)
+}

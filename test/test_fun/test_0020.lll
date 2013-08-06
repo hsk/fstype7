@@ -7,4 +7,17 @@
 5.000000
 ,)
 result ***/
-var a:byte=1;var b:short=2; var c:int = 3; var d:float = 4.0 var e:double = 5.0; def main() {print_b(a);print_s(b);print_i(c);print_f(d); print_d(e)}
+
+var a:byte=1;
+var b:short=2;
+var c:int = 3;
+var d:float = 4.0
+var e:double = 5.0;
+
+def main() {
+	print_b(a);
+	print_s(b);
+	print_i(c);
+	print_f(d);
+	print_d(e);
+}

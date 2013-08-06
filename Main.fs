@@ -9,36 +9,36 @@ let mutable debug = true
 
 
 type Opts = {
-        files:string list;
-        out:string;
-        framework: string;
-        link: bool;
-        s: bool;
-        run: bool;
-        p: bool;
-        llvm: bool;
-        v: string;
-        debug: bool;
-        arch:string;
-        bit:int
-    }
+    files:string list;
+    out:string;
+    framework: string;
+    link: bool;
+    s: bool;
+    run: bool;
+    p: bool;
+    llvm: bool;
+    v: string;
+    debug: bool;
+    arch:string;
+    bit:int
+}
 
 type Opts with
     // default values
     static member make() = {
-            files = [];
-            out = "";
-            framework = "";
-            link = true;
-            s = false;
-            run = false;
-            p = false;
-            llvm = false;
-            v = "2";
-            debug = false;
-            arch = "x86-64";
-            bit = 64
-        }
+        files = [];
+        out = "";
+        framework = "";
+        link = true;
+        s = false;
+        run = false;
+        p = false;
+        llvm = false;
+        v = "2";
+        debug = false;
+        arch = "x86-64";
+        bit = 64
+    }
 
 (** 引数オプション *)
 let mutable opt:Opts = Opts.make()
@@ -179,11 +179,13 @@ let rec opts(args:string list, m:Opts) :Opts =
  *)
 let test_main(args: string []):int =
     try
+        benchStart()
         Test.test("test/test_global_var/test_0005.lll")
         // Test.test("test/test_global_var/test_0004.lll")
         //        Test.test("test/test_byte/test_0006.lll")
         //Test.test("sample/hello.lll")
-        //Test.tests()
+        Test.tests()
+        bench "end"
         0
     with
     | e ->
@@ -293,8 +295,8 @@ let main2 (args:string []):int =
 
 [<EntryPoint>]
 let main(args:string []):int =
-    //test_main args
+    test_main args
     // main1 args
     // main2 args
     //main2 ("sample/opengl.lll sample/program.lll -run -framework OpenGL -framework glut".Split(' '))
-    main2 ("sample/opengl.lll sample/shoot.lll -run -framework OpenGL -framework glut".Split(' '))
+    //main2 ("sample/opengl.lll sample/shoot.lll -run -framework OpenGL -framework glut".Split(' '))

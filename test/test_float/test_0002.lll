@@ -3,4 +3,9 @@
 (0,11.100000
 ,)
 result ***/
-def main(){{ var a:float; a=11.1; print_f(a)}}
+
+def main() {
+	var a:float;
+	a=11.1;
+	print_f(a);
+}

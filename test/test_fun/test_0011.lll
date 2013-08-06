@@ -3,4 +3,6 @@
 (0,-2147483648
 ,)
 result ***/
-def main():void = print_i(inc(2147483647));def inc(a:int):int = a + cast(int)1
+
+def main():void = print_i(inc(2147483647));
+def inc(a:int):int = a + cast(int)1

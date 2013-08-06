@@ -3,4 +3,9 @@
 (0,1
 ,)
 result ***/
-def main(){{while(1) {print_l(1); break; }  }}
+def main() {
+	while(1) {
+		print_l(1);
+		break;
+	}
+}

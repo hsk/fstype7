@@ -3,4 +3,19 @@
 (0,20
 ,)
 result ***/
-typedef A = struct {m:(int)=>void} def a(n:int) { print_i(n) } var a1:Ptr[A]; def main() {a1=new A;  a1.m= a; a1.m(20);}
+
+typedef A = struct {
+	m:(int)=>void
+}
+
+def a(n:int) {
+	print_i(n)
+}
+
+var a1:Ptr[A];
+
+def main() {
+	a1 = new A;
+	a1.m = a;
+	a1.m(20);
+}

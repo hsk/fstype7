@@ -3,4 +3,12 @@
 (0,20
 ,)
 result ***/
-def a(n:int) { print_i(n) } def main() { var ccc= a; ccc(20);}
+
+def a(n:int) {
+	print_i(n)
+}
+
+def main() {
+	var ccc= a;
+	ccc(20);
+}

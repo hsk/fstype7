@@ -3,4 +3,7 @@
 (0,-32768
 ,)
 result ***/
-def main():void = print_s(inc(32767));def inc(a:short):short = a + cast(short)1
+
+def main():void = print_s(inc(32767));
+
+def inc(a:short):short = a + cast(short)1

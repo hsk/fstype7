@@ -3,4 +3,11 @@
 (0,12
 ,)
 result ***/
-def main(){{ var a:double var b:long a = 10.0 b = 2 b = b + cast(long)a; print_l(b)}}
+def main() {
+	var a:double
+	var b:long
+	a = 10.0
+	b = 2
+	b = b + cast(long)a;
+	print_l(b)
+}

@@ -5,4 +5,13 @@
 1
 ,)
 result ***/
-def main(){{var e:long[3]; var f:*int; f = e; e[0] = 4294967298; print_l(e[0]); print_i(f[0]); print_i(f[1]);}}
+
+def main() {
+	var e:long[3];
+	var f:*int;
+	f = e;
+	e[0] = 4294967298;
+	print_l(e[0]);
+	print_i(f[0]);
+	print_i(f[1]);
+}

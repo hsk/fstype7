@@ -5,4 +5,11 @@
 3
 ,)
 result ***/
-def main(){{var a:long a = 0 while(a < 3) { a = a + 1; print_l(a) }}}
+
+def main() {
+	var a:long a = 0
+	while(a < 3) {
+		a = a + 1;
+		print_l(a);
+	}
+}

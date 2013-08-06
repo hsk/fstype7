@@ -3,4 +3,9 @@
 (0,333
 ,)
 result ***/
-def main(){{ var c:long; c = 333; print_l(c)}}
+
+def main(){
+	var c:long;
+	c = 333;
+	print_l(c)
+}

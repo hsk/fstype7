@@ -29,7 +29,22 @@ type Pos(src:string, no:int) =
 
 let P0 = Pos("", 0)
 
-exception SyntaxError of Pos * string
+exception SyntaxError of int * Pos * string
+
+// 1000 - compact parser error
+// 1001 lexer error '%s'
+// 1002
+// 1003 syntax error. expected is '%A' but found unexpected token %A\n%A 括弧の閉じタグが見つからなかった
+// 1004 syntax error. expected is '%A' but found unexpected token %A\n%A %sに対応する開始の括弧が見つからなかった
+// 1005 syntax error. expected is '%A' but found unexpected token %A\n%A %sに対応する開始の括弧が見つからなかった
+// 1006 syntax error. expected is '%A' but found unexpected token %A\n%A %sの閉じ括弧が見つからなかった
+// 1007 syntax error unexpected EOF
+// 2000 - transduce error
+// 2001 import parse error
+// 2002 type parse error
+// 2003 構造体のメンバのparse error
+// 2004 関数のパラメータのparse error
+// 2005 メインの変換のparse error
 
 (** トークン *)
 type Token =
@@ -324,16 +339,16 @@ module Parser =
                 | Some(LSpc1, [o; a]) -> str <- str.Substring(o.Length); connectf <- false; offset<- offset + o.Length; t()
                 | Some(LSpc, [o; a]) -> str <- str.Substring(o.Length); offset<- offset + o.Length; t()
                 | Some(LEof, [o; a; b]) -> setToken(0,Id(pos(), ""))
-                | _ -> raise(Exception ("error '" + str + "'"))
+                | _ -> raise(SyntaxError (1001, pos(), "lexer error '" + str + "'"))
             t()
             ptoken
         lex() |> ignore
 
-        let eat(e: Token, er:Token, s:String): Token =
+        let eat(e: Token, er:Token, no:int, s:String): Token =
             match (lex(),e) with
             | (Id(_,a), Id(_,b)) when a = b -> ptoken
             | _ ->
-                raise(SyntaxError(
+                raise(SyntaxError(no,
                                   ptoken.pos,
                                   sprintf "syntax error. expected is '%A' but found unexpected token %A\n%A %s" e ptoken er.pos s))
         let rec exp(p: int): Token =
@@ -344,14 +359,14 @@ module Parser =
                     match prs.TryFind(op) with
                     | Some(OpP(np, ep)) ->
                         let e = loop(exp(np),np)
-                        let e2 = Prn(t, e, eat(ep,t,"括弧の閉じタグが見つからなかった"))
+                        let e2 = Prn(t, e, eat(ep,t,1003,"括弧の閉じタグが見つからなかった"))
                         //println("e2="+e2)
                         e2
                     | Some(Opl(np)) -> Pre(t, exp(np))
                     | Some(OpS(np, sp, ep)) ->
-                        eat(sp, t, op+"に対応する開始の括弧が見つからなかった") |> ignore
+                        eat(sp, t, 1004, op+"に対応する開始の括弧が見つからなかった") |> ignore
                         let e = loop(exp(0), 0)
-                        eat(ep, t, op+"に対応する終了の括弧が見つからなかった") |> ignore
+                        eat(ep, t, 1005, op+"に対応する終了の括弧が見つからなかった") |> ignore
                         St(t, sp, e, ep, exp(np))
                     | None -> t
                 | _ -> t
@@ -365,13 +380,13 @@ module Parser =
                     | Some(OIp(np, ep)) when (np > p && connectf) ->
                         let sp = lex()
                         let e = loop(exp(0), 0)
-                        inp(Msg(t, sp, e, eat(ep,sp, op+"の閉じ括弧が見つからなかった")))
+                        inp(Msg(t, sp, e, eat(ep,sp, 1006, op+"の閉じ括弧が見つからなかった")))
                     | _ -> t
                 | _ -> t
 
             match token with
             | Id(_, ")") | Id(_, "}") | Id(_, "]") | Id(_, ":") -> Id(pos(), "void")
-            | Id(_, "") -> raise(SyntaxError(pos(), "syntax error unexpected EOF"))
+            | Id(_, "") -> raise(SyntaxError(1007, pos(), "syntax error unexpected EOF"))
             | _ ->
                 let rc:Token = inp(pr(lex()))
 //                Console.WriteLine (""+rc.ToString())

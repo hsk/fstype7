@@ -54,7 +54,7 @@ let mapfind(id:string):T =
     with
     | e ->
         printfn "global %A env %A " globalmap envmap
-        raise (System.Exception(sprintf "%s not found." id))
+        raise (TypeError(3601, P0, sprintf "%s not found." id))
 (**
  * シンボル検索
  *)

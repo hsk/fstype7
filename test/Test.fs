@@ -79,7 +79,7 @@ let test file =
             else
                 raise(Exception(sprintf "error test %s %s\nexpected = %s but result = %s" file name expected result)    )
         with
-            | Typing.TypeError(p,m) as e ->
+            | AST.TypeError(no,p,m) as e ->
                 printfn "%d %s '%s'" p.no m expected
                 if expected = "(null)" then () else raise e
             | e ->

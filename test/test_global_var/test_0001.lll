@@ -4,15 +4,17 @@
 ,)
 result ***/
 
-        typedef Game = struct {
-          score:int
-        }
-        def main() {
-          Game_new(&game)
-          print_i(game.score)
-        }
-        var game:Game
-  def Game_new(game:*Game) {
-    game->score = 110
-  }
+typedef Game = struct {
+	score:int
+}
 
+def main() {
+	Game_new(&game)
+	print_i(game.score)
+}
+
+var game:Game
+
+def Game_new(game:*Game) {
+	game->score = 110
+}

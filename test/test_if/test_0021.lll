@@ -4,4 +4,9 @@
 0
 ,)
 result ***/
-def main(){{switch(1) {case 1: print_l(1); default: print_l(0) } }}
+def main() {
+	switch(1) {
+	case 1: print_l(1);
+	default: print_l(0)
+	}
+}

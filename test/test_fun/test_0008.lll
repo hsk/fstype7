@@ -3,4 +3,7 @@
 (0,-128
 ,)
 result ***/
-def main():void = print_b(inc(127));def inc(a:byte):byte = a + cast(byte)1
+
+def main():void = print_b(inc(127));
+
+def inc(a:byte):byte = a + cast(byte)1

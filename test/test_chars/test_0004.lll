@@ -3,4 +3,6 @@
 (0,a"
 ,)
 result ***/
-def main(){{println("a\"")}}
+def main() {
+	println("a\"")
+}

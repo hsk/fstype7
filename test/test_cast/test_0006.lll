@@ -3,4 +3,12 @@
 (0,12
 ,)
 result ***/
-def main(){{ var a:byte var b:long a = 10 b = 2 b = b + a; print_l(b)}}
+
+def main() {
+	var a:byte
+	var b:long
+	a = 10
+	b = 2
+	b = b + a
+	print_l(b)
+}

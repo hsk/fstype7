@@ -3,4 +3,9 @@
 (0,1
 ,)
 result ***/
-def main(){{if (10 != 20) print_i(1) else print_i(2)}}
+
+def main() {
+
+	if (10 != 20) print_i(1)
+	else print_i(2)
+}

@@ -106,7 +106,7 @@ type ConstFold(parent: Option<ConstFold>) =
     member this.stripPointerT(a: R): R =
         match KNormal.tName2(a.t) with
         | "a" | "p" when(map.ContainsKey(a.id)) ->
-            match map.Item(a.id).t.stripType([]) with
+            match map.Item(a.id).t.stripType(P0, []) with
             | Tp(t2) -> a.setT(t2)
             | Tr(t2) -> a.setT(t2)
             | TArr(t2, _) -> a.setT(t2)

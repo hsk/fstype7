@@ -2,6 +2,7 @@
 (0,10
 ,)
 result ***/
-def main(){{
-print_b(10L)
-}}
+
+def main() {
+	print_b(10L)
+}

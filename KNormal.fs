@@ -64,7 +64,7 @@ let genRL(t: T): R =
 let transLoad(a: R): R =
     match tName2(a.t) with
     | "a" | "p" ->
-        let t = Env.find(a.id).stripType([])
+        let t = Env.find(a.id).stripType(P0, [])
         match t with
         | Tp _ ->
             let r = genRL(t)
@@ -173,15 +173,15 @@ let transAStore(t: T, e: R, idx: R, b: R): R =
  * @return (T, Any) 検索結果の型と、オフセット値
  *)
 let rec getOffset(t: T, x: String) =
-    match t.stripType([]) with
+    match t.stripType(P0, []) with
     | TStr(m) ->
         let rec ck(m1: (string * T) list, s: int64): (T * int64) =
             match m1 with
-            | [] -> raise(Exception(sprintf "error %A is not have %A"  m x))
+            | [] -> raise(TypeError(4001,P0,sprintf "error %A is not have %A"  m x))
             | (name, t) :: xs -> if (name = x) then (t, s) else ck(xs, s + 1L)
         ck(m, 0L)
     | Tp(t) -> getOffset(t, x)
-    | t -> raise (Exception(sprintf "error %A" t))
+    | t -> raise (TypeError(4002,P0,sprintf "error %A" t))
 
 (**
  * フィールド取得
@@ -422,7 +422,7 @@ let rec transLocal(e: E): R =
             | ((n, ls), (ECase(_, null, _), _)) ->
                 letault = lbl + n; (n + 1, ls)
             | ((n, ls), (ECase(_, e, _), _)) -> (n + 1, (transLocal(e), lbl + n) :: ls)
-            | a -> throw new Exception(" " + a)
+            | a -> throw new TypeError(4000,p," " + a)
         }
         add(LLSwitch(ra, letault, ls.reverse))
         breaks = lbl + cases.length :: breaks
@@ -448,7 +448,7 @@ let rec transLocal(e: E): R =
                 add(LLBin(r, "eq", l3, ra))
                 add(LLJne(r, next1, lbl+no.ToString(), next1))
                 (hasDefault, no + 1)
-            | _ -> raise (Exception "error")
+            | _ -> raise (TypeError(4003,p, "error"))
         let (hasDefault, letaultno) = List.fold ff1 (false,0) cases
         if (not hasDefault) then
             add(LLGoto(lbl+"_block", end1))
@@ -464,7 +464,7 @@ let rec transLocal(e: E): R =
                 add(LLLabel(lbl + no.ToString(), lbl + no.ToString()))
                 transLocal(b) |> ignore
                 no + 1
-            | _ -> raise(Exception "error")
+            | _ -> raise(TypeError(4004,p, "error"))
 
         // とび先
         List.fold ff 0 cases |> ignore
@@ -473,7 +473,7 @@ let rec transLocal(e: E): R =
         add(LLLabel(end1, end1))
         RNULL
         
-    | _ -> raise(Exception(sprintf "error %A" e))
+    | _ -> raise(TypeError(4005,e.pos,sprintf "error %A" e))
 (**
  * フィールドの変換
  *
@@ -487,7 +487,7 @@ and transField(e: E): R =
     | EPtr(p, t, e) -> transALoad(t, transField(e), RN(Ti(64), "0"))
     | EField(p, _, t, e, idx) -> transGetField(t, idx, transField(e))
     | EArrow(p, _, t, e, idx) -> transGetField(t, idx, transField(EPtr(p, t, e)))
-    | _ -> raise(Exception(sprintf "error %A" e))
+    | _ -> raise(TypeError(4006,e.pos,sprintf "error %A" e))
 
 (**
  * 代入の変換
@@ -507,7 +507,7 @@ and transAssign(t: T, a: E, b: E): R =
         let b2 = transLocal(b)
         transPutField(t, idx, e2, b2)
     | EArrow(p, _, t, e, idx) -> transPutField(t, idx, transField(EPtr(p, t, e)), transLocal(b))
-    | _ -> raise (Exception(sprintf "error assign %A %A %A" t a b))
+    | _ -> raise (TypeError(4007, a.pos, sprintf "error assign %A %A %A" t a b))
 
 (**
  * グローバルな式の変換
@@ -528,10 +528,10 @@ let transGlobal(e: E):unit =
                 | ELd(p, _, v) -> v.ToString()
                 | ELdd(p, _, v) -> v.ToString()
                 | ETuple(p1, _, ls) -> "{" + String.Join(", ", List.map (fun (l:E) -> l.t.p + " " + p(l)) ls) + "}"
-                | _ -> raise (Exception(sprintf "error expression %A" e))
+                | _ -> raise (TypeError(4008,e.pos,sprintf "error expression %A" e))
             add(LLGlobal(RG(t, id), RN(t, p(v))))
         | (t, ENull(p)) -> add(LLGlobal(RG(t, id), RNULL))
-        | _ -> raise (Exception "error")
+        | _ -> raise (TypeError(4009,e.pos,"error"))
 
     | EFun(p, t, n, prm, b) ->
         Env.init(prm)
@@ -560,8 +560,7 @@ let transGlobal(e: E):unit =
     | ETypeDef(p, t, id) -> ()
     | ENop _ -> ()
     | EImport _ -> ()
-    | _ -> raise (Exception (sprintf "error global value %A " e))
-    //| _ -> raise (TypeError(e.pos, "error global value %A " + e)
+    | _ -> raise (TypeError(4010,e.pos,sprintf "error global value %A " e))
 
 (**
  * エントリポイント

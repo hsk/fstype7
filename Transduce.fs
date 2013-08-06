@@ -27,7 +27,7 @@ let rec fimport(st: Token): String =
     match st with
     | Bin(Id(_, a), Id(_, "."), b) -> a + "/" + fimport(b)
     | Id(_, a) -> a
-    | o -> raise(SyntaxError(o.pos, "error syntax error " + o.first.ToString() + " " + o.ToString()))
+    | o -> raise(SyntaxError(2001, o.pos, "error syntax error " + o.first.ToString() + " " + o.ToString()))
 
 (**
  * 型の変換
@@ -50,7 +50,7 @@ let rec t(st: Token): T =
     | Prn(Id(_, "("), a, Id(_, ")")) -> t(a)
     | Id(_, s) -> TDef(s)
     | o ->
-        raise(SyntaxError(o.pos, "error syntax error " + o.first.ToString() + " " + o.ToString()))
+        raise(SyntaxError(2002, o.pos, "error syntax error " + o.first.ToString() + " " + o.ToString()))
 
 (**
  * 型リストの変換
@@ -76,7 +76,7 @@ and members(st: Token, m: (string * T) list): (string * T) list =
     | Bin(Id(_, a), Id(_, ":"), b) -> (a, t(b)) :: m
     | Pst(a, Id(_, ";")) -> members(a, m)
     | Bin(a, Id(_, "@"), b) -> members(a, members(b, m))
-    | o -> raise(SyntaxError(o.pos, "error syntax error " + o.first.ToString() + " " + o.ToString()))
+    | o -> raise(SyntaxError(2003, o.pos, "error syntax error " + o.first.ToString() + " " + o.ToString()))
 
 (**
  * 関数のパラメータの変換
@@ -87,7 +87,7 @@ let fprms(st: Token): (string * T) list =
         | Bin(a, Id(_, ","), b) -> ff(b, ff(a, m))
         | Bin(Id(_, a), Id(_, ":"), typ) -> (a, t(typ)) :: m
         | Id(_, "void") -> m
-        | o -> raise(SyntaxError(o.pos, "error syntax error " + o.first.ToString() + " " + o.ToString()))
+        | o -> raise(SyntaxError(2004, o.pos, "error syntax error " + o.first.ToString() + " " + o.ToString()))
     List.rev (ff(st, []))
 
 (**
@@ -204,7 +204,7 @@ let rec f(o: Token): E =
     | Pre(Id(_, "case"), Bin(a, Id(_, ":"), b)) -> ECase(o.p, Tn, f(a), f(b))
     | Prn(Id(_, "case"), Id(_, "_"), Id(_, ":")) -> ECase(o.p, Tn, ENull(o.p), ENop(o.p, Tv, ""))
     | Prn(Id(_, "case"), a, Id(_, ":")) -> ECase(o.p, Tn, f(a), ENop(a.p, Tv, ""))
-    | o -> raise(SyntaxError(o.first.pos, "error syntax error " + o.first.ToString() + " " + o.ToString()))
+    | o -> raise(SyntaxError(2005, o.first.pos, "error syntax error " + o.first.ToString() + " " + o.ToString()))
 
 (**
  * ２項の構文木を作成し、１つ目の項の位置にする

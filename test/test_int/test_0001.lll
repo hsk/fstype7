@@ -3,4 +3,7 @@
 (0,10
 ,)
 result ***/
-def main(){{print_i(10)}}
+
+def main() {
+	print_i(10)
+}

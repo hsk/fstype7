@@ -64,7 +64,7 @@ let rec output(l: LL):unit =
             p(id, "zext i1 " + r.p + " to " + id.t.p)
         | (Ti _, "neg") -> p(id, "sub " + a.t.p + " 0, " + a.p)
         | (Tf, "neg") | (Td, "neg") -> p(id, "fsub " + a.t.p + " 0.0, " + a.p)
-        | _ -> raise(Exception(sprintf "error %A" l))
+        | _ -> raise(TypeError(5001,P0,sprintf "error %A" l))
 
     | LLBin(r, op, a, b) ->
         match (a.t, op) with
@@ -85,7 +85,7 @@ let rec output(l: LL):unit =
 
         | (Tf, _) | (Td, _) ->
             match op with
-            | "lt" | "le" | "gt" | "ge" ->
+            | "lt" | "le" | "gt" | "ge" | "eq" | "ne" ->
                 let r2 = KNormal.genRL(Ti(1))
                 p(r2, "fcmp o" + op + " " + a.t.p + " " + a.p + ", " + b.p)
                 p(r, "zext i1 " + r2.p + " to i64")
@@ -122,7 +122,7 @@ let rec output(l: LL):unit =
         p(r, "getelementptr inbounds " + addr.t.p + " " + addr.p + ", " + a.t.p + " " + a.p)
 
     | LLField(r: R, addr: R, zero: R, a: R) ->
-        match addr.t.stripType([]) with
+        match addr.t.stripType(P0, []) with
         | Tp((TArr _ | TStr _ ) as tt) ->
             p(r, "getelementptr inbounds " + addr.t.p + " " + addr.p + ", " + zero.t.p + " " + zero.p + ", " + a.t.p + " " + a.p)
         | _ ->
@@ -135,7 +135,7 @@ let rec output(l: LL):unit =
         Asm.p("entry:")
         List.iter output ls
 
-        match (t.stripType([]), r) with
+        match (t.stripType(P0, []), r) with
         | (_, RNULL) | (Tv, _) -> Asm.p__("ret " + t.p)
         | _ ->
             Asm.p__("store " + t.p + " " + r.p + ", " + Tp(t).p + " %..retVal")
@@ -157,7 +157,7 @@ let rec output(l: LL):unit =
 
     | LLCast(r: R, b: R) ->
         comment(sprintf "%A %A" r b)
-        match (r.t.stripType([]), b.t.stripType([])) with
+        match (r.t.stripType(P0,[]), b.t.stripType(P0,[])) with
         | (Tp(t), Tp(_)) ->
             p(r, "bitcast " + b.t.p + " " + b.p + " to " + r.t.p)
         | (Tp(t), _) ->
@@ -222,7 +222,7 @@ let rec output(l: LL):unit =
             Asm.p(r.p + "= common global " + r.t.p + " zeroinitializer")
         else
             Asm.p(r.p + "= global " + r.t.p + " " + v.p)
-    | _ -> raise (Exception (sprintf "error %A" l))
+    | LLAssign _ -> raise (TypeError(5002, P0, sprintf "error %A" l))
 
 (**
  * llemitのエントリポイント

@@ -3,4 +3,17 @@
 (0,10
 ,)
 result ***/
-def main(){var a1:A b(&a1,10)}def b(a1:Ptr[A],a:int){a1.m=a print_i(a1.m)}typedef A=struct{m:int}
+
+def main(){
+	var a1:A
+	b(&a1,10)
+}
+
+def b(a1:Ptr[A],a:int) {
+	a1.m = a
+	print_i(a1.m)
+}
+
+typedef A = struct {
+	m:int
+}

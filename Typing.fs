@@ -8,12 +8,6 @@ open AST
 open System
 
 (**
- * 型エラー
- *)
-
-exception TypeError of P * string
-
-(**
  * 暗黙の型変換付きの型付け処理
  *
  * @param e: Ebin
@@ -51,7 +45,7 @@ let autoCastBinT(e: E, a1: E, b1: E): E =
         | (EBin(p,t,ta,op,_,_), t1, Tn) ->
             printfn "kore 2 %A %A" a.pos b.pos
             EBin(p, t1, ta, op, a, b.setT(t1))
-        | _ -> raise(Exception "error")
+        | _ -> raise(TypeError(3001, e.pos, "error"))
     // 比較演算子の場合返り値はTlとする
     let rc =
         match e2 with
@@ -59,8 +53,9 @@ let autoCastBinT(e: E, a1: E, b1: E): E =
             match op with
             | "eq" | "ne" | "gt" | "lt" | "ge" | "le" -> EBin(p, Ti(64), t, op, a, b)
             | _ -> EBin(p, t, t, op, a, b)
-        | _ -> raise(Exception "error")
+        | _ -> raise(TypeError(3002, e2.pos, "error"))
     rc
+
 (**
  * ２つの式の型を合わせる代入時処理
  *
@@ -74,7 +69,7 @@ let unifyBinT(f: E, a: E, b: E): E =
     // printfn "unifyBinT\nf=%A\na=%A\nb=%A" f a b
     match (a.t, b.t) with
     // aとbが同じなら親も同じにする
-    | (t1, t2) when (t1.stripType([]) = t2.stripType([])) -> EAssign(f.pos, t1, a, b)
+    | (t1, t2) when (t1.stripType(a.pos, []) = t2.stripType(b.pos, [])) -> EAssign(f.pos, t1, a, b)
     // bがlongならaに合わせる a = 1+5 みたいな処理のaがbyteだったら、byteに勝手に変換しちゃうよと。
     | (ta, Ti(64)) -> EAssign(f.pos, ta, a, ECast(b.pos, ta, b))
     // floatとdoubleならfloatにする doubleな値は、変数に合わせてしまう。合わせてしまうのは良いけど、キャスト演算が入ってるの？
@@ -86,10 +81,10 @@ let unifyBinT(f: E, a: E, b: E): E =
     | (TArr(t1, _), Tp(t2)) when (t1 = t2) -> EAssign(f.pos, Tp(t1), a, b)
     // 片方の型が決まっていなければコピーする
     | (Tn, t1) ->
-        raise(TypeError(a.pos, sprintf "kore 3 %A" b.pos))// p(f, f.copy(t1, setT(a, t1), b))
+        raise(TypeError(3003, a.pos, sprintf "kore 3 %A" b.pos))// p(f, f.copy(t1, setT(a, t1), b))
     | (t1, Tn) ->
-        raise(TypeError(a.pos, sprintf "kore 4 %A" b.pos))// p(f, f.copy(t1, a, setT(b, t1)))
-    | (t1, t2) -> raise(TypeError(a.pos, sprintf "type error %A %A" b.pos a ))
+        raise(TypeError(3004, a.pos, sprintf "kore 4 %A" b.pos))// p(f, f.copy(t1, a, setT(b, t1)))
+    | (t1, t2) -> raise(TypeError(3005, a.pos, sprintf "type error %A %A" b.pos a ))
 
 
 let mutable funType: T = Tn
@@ -109,32 +104,32 @@ let rec typingLocal(pt: T, e: E): E =
     match e with
     | EFun(p, t, id, p1, b) ->
         // 関数内関数はエラー
-        raise (TypeError(e.pos, "inner function is not supported"))
+        raise (TypeError(3006, e.pos, "inner function is not supported"))
     | ETypeDef(p, t, id) -> // ローカル環境に型を保存する。
         if (Env.contains(id)) then
-            raise(TypeError(e.pos, id + " is already defined"))
+            raise(TypeError(3007, e.pos, id + " is already defined"))
         Env.addTypeDef(id, t)
         e
     | EVar(p, t: T, a: string, ENull(_)) -> // ローカル環境に型を保存する
         if (Env.contains(a)) then
-            raise(TypeError(e.pos, a + " is already defined"))
+            raise(TypeError(3008, e.pos, a + " is already defined"))
         // これはtypedefではないのだけど、addtypedefになってるけど、addはローカル変数のアドレス計算もするのでコレでok
         Env.addTypeDef(a, t)
         e
     // 配列リテラル
     | EVar(p, t, a, (ECall(pc, _, (EId(idp, _, "Array") as eda), ls) as c)) as ea->
         if (Env.contains(a)) then
-            raise(TypeError(e.pos, a + " is already defined"))
+            raise(TypeError(3009, e.pos, a + " is already defined"))
         let (tt, t1) =
             match t with
             | TArr(t1, size) ->
                 if (size <> (int64 ls.Length)) then
-                    raise (TypeError(e.pos, "array size dont match"))
+                    raise (TypeError(3010, e.pos, "array size dont match"))
                 (t, t1)
             | Tn ->
                 let t1 = typingLocal(Tn, List.head ls).t
                 (TArr(t1, (int64 ls.Length)), t1)
-            | _ -> raise (Exception("error"))
+            | _ -> raise (TypeError(3011, p, "error"))
 
         let ff (i, l) a1 =
                 (i + 1L, EAssign(p, t1, EArray(p, t1, EId(p, tt, a), ELd(p, Ti(32), i)), typingLocal(t1, a1)) :: l)
@@ -145,7 +140,7 @@ let rec typingLocal(pt: T, e: E): E =
     // var a = 1 型推論
     | EVar(p, Tn, a, c)->
         if Env.contains(a) then
-            raise(TypeError(e.pos, a + " is already defined "))
+            raise(TypeError(3012,e.pos, a + " is already defined "))
         let c2 = typingLocal(pt, c)
         Env.addTypeDef(a, c2.t)
         EVar(p, c2.t, a, c2)
@@ -160,13 +155,13 @@ let rec typingLocal(pt: T, e: E): E =
             | ELd (p,_,a) -> ELd(p,t,a)
             | _ ->
                 let c2 = typingLocal(pt, c)
-                if (t <> c2.t) then raise(TypeError(e.pos, "type match error"))
+                if (t <> c2.t) then raise(TypeError(3013,e.pos, "type match error"))
                 else c2
         
         Env.addTypeDef(a, t)
         EVar(p, t, a, c2)
-    | EVal _ ->
-        raise (Exception "not implementation local val")
+    | EVal (p, t, a, c) ->
+        raise (TypeError(3014, p, "not implementation local val"))
     // ここからが文。式との違いは、親が値を求めていないかもしれないと言う事で、必要ない時は値を消す処理をどこかでする必要がある。
     // 親が求めている型は分からないので何ともならないけどw
     // 親が求める型に合わせて、popする式を入れるのは手だろうなと思うのと、そうするとよりunifyな感じになるよなと。
@@ -229,14 +224,14 @@ let rec typingLocal(pt: T, e: E): E =
         | (_, Tn) -> ELdd(p, Td, i)
         | _ -> e
     | ELds(p, t, i: string) ->
-        let pt2 = pt.stripType([])
+        let pt2 = pt.stripType(p, [])
         match (pt2, t) with
         | (Tv, Tn) -> ELds(p, Tp(Ti(8)),i)
         | (Tn, Tn) -> ELds(p, Tp(Ti(8)),i)
         | (Tp(Ti(8)), Tn) -> ELds(p, pt,i)
         | (Tp(Tu(8)), Tn) -> ELds(p, pt,i)
         | _ ->
-            raise (Exception("dame " + pt2.ToString() + " " + t.ToString()))
+            raise (TypeError(3015,p,"dame " + pt2.ToString() + " " + t.ToString()))
     | ENeg(p, t: T, a: E) ->
         let a2 = typingLocal(pt, a)
         ENeg(p, a2.t, a2)
@@ -262,10 +257,10 @@ let rec typingLocal(pt: T, e: E): E =
         ERef(p, Tp(a2.t), a2)
     | EPtr(p, t: T, a: E) ->
         let a2 = typingLocal(Tn, a)
-        match a2.t.stripType([]) with
+        match a2.t.stripType(p, []) with
         | Tp(t) -> EPtr(p, t, a2)
         | TArr(t, _) -> EPtr(p, t, a2)
-        | t -> raise(Exception("error " + t.ToString()))
+        | t -> raise(TypeError(3016,p, "error " + t.ToString()))
     | EGoto(p, t: T, a: string) -> EGoto(p, Tv, a)
     | ELabel(p, t: T, a: string, b) ->
         let b2 = typingLocal(Tn, b)
@@ -284,7 +279,7 @@ let rec typingLocal(pt: T, e: E): E =
     | ERet(p, t: T, a: E) ->
         let a2 = typingLocal(funType, a)
         if (funType <> a2.t) then
-            raise(TypeError(e.pos, "return type error. expected type is " +
+            raise(TypeError(3017, e.pos, "return type error. expected type is " +
                             funType.ttos + " but found " + a2.t.ttos + " " + e.ToString()))
         ERet(p, Tr(a2.t), a2)
     // 変数
@@ -294,7 +289,7 @@ let rec typingLocal(pt: T, e: E): E =
             let t2 = Env.find(id)
             // 型が決まらなかったらエラー
             if (t2 = Tn) then
-                raise (TypeError(e.pos, "found undefined id '" + id + "'"))
+                raise (TypeError(3018, e.pos, "found undefined id '" + id + "'"))
             EId(p, t2, id)
         | _ -> e
 
@@ -316,16 +311,16 @@ let rec typingLocal(pt: T, e: E): E =
             | TStr(m) ->
                 match List.tryFind (fun (s,_) -> s = id) m with
                 | None ->
-                    raise( TypeError(e.pos, "has not have " + a2.t.ttos + " " + id))
+                    raise( TypeError(3019, e.pos, "has not have " + a2.t.ttos + " " + id))
                 | Some(s,t) -> t 
             | Tp(t1) -> f(t1)
-            | _ -> raise( Exception("error"))
+            | _ -> raise( TypeError(3020,p,"error"))
         EField(p, f(a2.t), a2.t, a2, id)
 
     | EArrow(p, t1: T, tt: T, a: E, id: string) ->
         let a2 = typingLocal(Tn, a)
         // 親元の型を調べる
-        match a2.t.stripType([]) with
+        match a2.t.stripType(p, []) with
         // 構造体のポインタのとき
         | Tp(t) ->
             // 矢印演算子
@@ -337,12 +332,12 @@ let rec typingLocal(pt: T, e: E): E =
                     | None ->
                         match List.tryFind (fun (s,_) -> s = "classInfo") m with
                         | None ->
-                            raise(Exception("not found structure member " + id + " in " + t.ttos))
+                            raise(TypeError(3021,p,"not found structure member " + id + " in " + t.ttos))
                         | Some(s,Tp(TStr(_) as t1)) -> findStruct(t1, EArrow(p, a2.t, t, a2, "classInfo"))
-                        | Some(_) -> raise(Exception("error"))
-                | _ -> raise(Exception("error"))
+                        | Some(_) -> raise(TypeError(3022,p,"error"))
+                | _ -> raise(TypeError(3023,p,"error"))
             findStruct(t, a2)
-        | _ -> raise(Exception("error"))
+        | _ -> raise(TypeError(3024,p,"error"))
     | ECall(pos, t: T, a1: E, ls: E list) ->
         let a2 = typingLocal(Tn, a1)
         let rec checkTypes(n: int, as1: T list, ps: E list, rs: E list): E list =
@@ -353,23 +348,23 @@ let rec typingLocal(pt: T, e: E): E =
             | (a :: as1, p :: ps) ->
                 let p2 = typingLocal(a, p)
 
-                if (a.stripType([]) <> p2.t.stripType([])) then
+                if (a.stripType(pos, []) <> p2.t.stripType(pos, [])) then
                     match a1 with
                     | EId(p1, t, id) ->
-                        raise(TypeError(a1.pos, n.ToString() + "th parameter type check error " + id + ":" +
+                        raise(TypeError(3025, a1.pos, n.ToString() + "th parameter type check error " + id + ":" +
                                         a2.t.ttos + " found:" + p2.t.ttos + " expected:" + a.ttos))
                     | _ ->
-                        raise(TypeError(a1.pos, n.ToString() + "th parameter type check error " + a1.ToString() + " " +
+                        raise(TypeError(3026, a1.pos, n.ToString() + "th parameter type check error " + a1.ToString() + " " +
                                         a2.t.ttos + " " + p2.t.ttos + " " + a.ttos))
                 checkTypes(n + 1, as1, ps, p2 :: rs)
             | _ ->
-                raise(TypeError(a1.pos, n.ToString() + "th parameter undefined function " + a1.ToString() + " a2.t=" + a2.t.ttos))
+                raise(TypeError(3027, a1.pos, n.ToString() + "th parameter undefined function " + a1.ToString() + " a2.t=" + a2.t.ttos))
         let (t2, prms) =
             match a2.t with
             | TFun(t2, prms) -> (t2, prms)
             | Tp(TFun(t2, prms)) -> (t2, prms)
             | _ ->
-                raise (TypeError(a1.pos, "error undefined function " + a1.ToString() + " a2.t=" + a2.t.ttos))
+                raise (TypeError(3028, a1.pos, "error undefined function " + a1.ToString() + " a2.t=" + a2.t.ttos))
         ECall(pos, t2, a2, checkTypes(1, prms, ls, []) |> List.rev)
     (*
     | e@ECall(t: T, a: E, ls: E list) ->
@@ -378,15 +373,15 @@ let rec typingLocal(pt: T, e: E): E =
             | TFun(t2, _) ->
                     let ls2 = ls.map(f(Tn,_))
                     p(e, e.copy(t2, a2, ls2))
-            | _ -> throw TypeError("error undefined function " + a);
+            | _ -> throw TypeError(3029, "error undefined function " + a);
         }*)
     | ENull(p) -> e
-    | EImport(p,_) -> raise(Exception "can't use import in function")
-    | ETuple(p,_,_) -> raise(Exception "can't use tuple this place")
+    | EImport(p,_) -> raise(TypeError(3030,p, "can't use import in function"))
+    | ETuple(p,_,_) -> raise(TypeError(3031,p, "can't use tuple this place"))
 
 let typingGlobalVar(ecopy: (P * T * string * E) -> E, ep: P, t: T, b: String, c: E): (string * T * E) =
     if (Env.contains(b)) then
-        raise( TypeError(ep, b + " is already defined "))
+        raise( TypeError(3032, ep, b + " is already defined "))
 
     match (t, b, c) with
     | (Tn, b, c) ->
@@ -407,16 +402,16 @@ let typingGlobalVar(ecopy: (P * T * string * E) -> E, ep: P, t: T, b: String, c:
 
     // タプル
     | (t, a, (ETuple(pd, _, c) as ed)) ->
-        match t.stripType([]) with
+        match t.stripType(ep, []) with
             | TStr(ts) as t ->
                 let rec cpType(a: E list, ts: (string * T) list): E list =
                     match (a, ts) with
                     | ([], []) -> []
                     | (a :: as1, (s, t) :: ts) -> (a.setT(t)) :: cpType(as1, ts)
-                    | _ -> raise(Exception("error"))
+                    | _ -> raise(TypeError(3033,ep,"error"))
                 (a, t, ecopy(ep, t, a, ETuple(pd, t, cpType(c, ts))))
-            | _ -> raise(TypeError(ep, a + " type unmatch"))
-    | _ -> raise(Exception "error")
+            | _ -> raise(TypeError(3034, ep, a + " type unmatch"))
+    | _ -> raise(TypeError(3035, ep, "error"))
 
 let mutable imports:string list = []
 
@@ -440,19 +435,19 @@ let typingGlobal(e: E): E =
             | (Tv, a) -> ()// voidならどんな型でも後でpopするのでok TODO: ここでpopを入れる事の検討
             | (t, Tr(a)) ->
                 if (t <> a) then
-                    raise(TypeError(e.pos,
+                    raise(TypeError(3036, e.pos,
                                    "error function " + id +
                                    " type error type=" + t.ttos + 
                                    " return type " + b2.t.ttos + " " + b2.ToString()))
             | (t, a) ->
                 if (t <> a) then
-                    raise (TypeError(e.pos, "error function " + id +
+                    raise (TypeError(3037, e.pos, "error function " + id +
                                     " type error type=" + t.ttos + " return type " + b2.t.ttos + " " + b2.ToString()))
         EFun(p, t, id, p1, b2)
     // TODO: 関数の型が未定義なら、コピーすると型推論出来るので推論できるけど、定義がないので困るので推論しない。
     | EVar(p, t: T, id: string, ENull(_)) -> // ローカル環境に型を保存する
         if Env.contains(id) then
-            raise(TypeError(e.pos, id + " is already defined env "))
+            raise(TypeError(3038, e.pos, id + " is already defined env "))
         // これはtypedefではないのだけど、addtypedefになってるけど、addはローカル変数のアドレス計算もするのでコレで宵。
         // TODO: もしかすると、addでタイプを保存して、addVarで変数の計算ってやったほうがいいのかも。
         GlobalEnv.add(id, t); e
@@ -469,7 +464,7 @@ let typingGlobal(e: E): E =
     | EImport _ -> e
     | ETypeDef _ -> e
     | ENop _ -> e
-    | e -> raise (Exception("error " + e.ToString())) // スルー
+    | e -> raise (TypeError(3039,e.pos,"error " + e.ToString())) // スルー
 
 (**
  * グローバルな型チェック
@@ -506,7 +501,7 @@ let rec checkGlobalType(e: Prog):unit =
         | EImport(p, id) -> importFile(id + ".lll")
 
         | e ->
-            raise(TypeError(e.pos, sprintf "syntax error found unexpected expression in global scope %A" e))
+            raise(TypeError(3040, e.pos, sprintf "syntax error found unexpected expression in global scope %A" e))
     match e with
     | Prog(b) -> List.iter f b
 and importFile(file:string):unit =
