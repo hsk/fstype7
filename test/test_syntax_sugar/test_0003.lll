@@ -3,4 +3,9 @@
 (0,12.000000
 ,)
 result ***/
-def main(){{ var a = 10.0 var b = 2 a = a + b; print_d(a)}}
+def main(){
+	var a = 10.0
+	var b = 2
+	a = a + b;
+	print_d(a)
+}

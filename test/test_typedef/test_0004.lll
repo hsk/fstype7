@@ -3,4 +3,18 @@
 (0,12
 ,)
 result ***/
-def main(){{typedef POINT=struct{x:int; y:int}var a:POINT; var b:POINT; var c:POINT;var p:*POINT; p= &c; a.x = 12; p = p + 2; print_i(p->x);}}
+
+def main(){
+	typedef POINT=struct{
+		x:int;
+		y:int
+	}
+	var a:POINT;
+	var b:POINT;
+	var c:POINT;
+	var p:*POINT;
+	p= &c;
+	a.x = 12;
+	p = p + 2;
+	print_i(p->x);
+}

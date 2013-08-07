@@ -5,8 +5,6 @@ module GlobalEnv
 
 open AST
 
-let mutable ts = new Map<T, string>([])
-
 (**
  * 初期化
  *)

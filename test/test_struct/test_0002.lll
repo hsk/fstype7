@@ -6,4 +6,18 @@
 5
 ,)
 result ***/
-def main(){{var b:struct{x:byte; y:byte;}[3];b[0].x = 2; b[0].y = 3; b[1].x = 4; b[1].y = 5;print_b(b[0].x); print_b(b[0].y); print_b(b[1].x); print_b(b[1].y);}}
+
+def main() {
+	var b:struct {
+		x:byte; y:byte;
+	}[3];
+	
+	b[0].x = 2;
+	b[0].y = 3;
+	b[1].x = 4;
+	b[1].y = 5;
+	print_b(b[0].x);
+	print_b(b[0].y);
+	print_b(b[1].x);
+	print_b(b[1].y);
+}

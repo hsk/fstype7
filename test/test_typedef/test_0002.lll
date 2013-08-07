@@ -3,4 +3,9 @@
 (0,333
 ,)
 result ***/
-def main(){{typedef mylong=long[1]; var c:mylong; c[0]=333; print_l(c[0]);}}
+def main() {
+	typedef mylong=long[1];
+	var c:mylong;
+	c[0]=333;
+	print_l(c[0]);
+}

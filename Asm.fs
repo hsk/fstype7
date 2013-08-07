@@ -12,7 +12,7 @@ let p(str:string):unit =
     writer.WriteLine(str)
 
 let p__(str:string):unit =
-    writer.WriteLine("        "+str)
+    writer.WriteLine("        " + str)
 
 let close() =
     writer.Close()

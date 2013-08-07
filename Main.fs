@@ -180,7 +180,9 @@ let rec opts(args:string list, m:Opts) :Opts =
 let test_main(args: string []):int =
     try
         benchStart()
-        Test.test("test/test_global_var/test_0005.lll")
+        Test.test("test/test_val/test_0001.lll")
+        Test.test("test/test_val/test_0002.lll")
+        //Test.test("test/test_global_var/test_0005.lll")
         // Test.test("test/test_global_var/test_0004.lll")
         //        Test.test("test/test_byte/test_0006.lll")
         //Test.test("sample/hello.lll")

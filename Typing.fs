@@ -86,7 +86,9 @@ let unifyBinT(f: E, a: E, b: E): E =
         raise(TypeError(3004, a.pos, sprintf "kore 4 %A" b.pos))// p(f, f.copy(t1, a, setT(b, t1)))
     | (t1, t2) -> raise(TypeError(3005, a.pos, sprintf "type error %A %A" b.pos a ))
 
-
+(**
+ * return type of function
+ *)
 let mutable funType: T = Tn
 
 (**
@@ -101,6 +103,60 @@ let mutable funType: T = Tn
  * @return E
  *)
 let rec typingLocal(pt: T, e: E): E =
+
+    let typingLocalVar(p:P, t:T, a:string, c:E, f:(P * T * string * E)->E):E =
+        match (t, c) with    
+        | (_, ENull(_)) -> // ローカル環境に型を保存する
+            if (Env.contains(a)) then
+                raise(TypeError(3008, e.pos, a + " is already defined"))
+            // これはtypedefではないのだけど、addtypedefになってるけど、addはローカル変数のアドレス計算もするのでコレでok
+            Env.addTypeDef(a, t)
+            e
+        // 配列リテラル
+        | (_, ECall(pc, _, (EId(idp, _, "Array") as eda), ls)) ->
+            if (Env.contains(a)) then
+                raise(TypeError(3009, e.pos, a + " is already defined"))
+            let (tt, t1) =
+                match t with
+                | TArr(t1, size) ->
+                    if (size <> (int64 ls.Length)) then
+                        raise (TypeError(3010, e.pos, "array size dont match"))
+                    (t, t1)
+                | Tn ->
+                    let t1 = typingLocal(Tn, List.head ls).t
+                    (TArr(t1, (int64 ls.Length)), t1)
+                | _ -> raise (TypeError(3011, p, "error"))
+
+            let ff (i, l) a1 =
+                    (i + 1L, EAssign(p, t1, EArray(p, t1, EId(p, tt, a), ELd(p, Ti(32), i)), typingLocal(t1, a1)) :: l)
+            let (n, l) = List.fold ff (0L, []) ls
+            Env.addTypeDef(a, tt)
+            EBlock(p, t, f(p, tt, a, ENull(p)) :: (List.rev l))
+
+        // var a = 1 型推論
+        | (Tn, _)->
+            if Env.contains(a) then
+                raise(TypeError(3012,e.pos, a + " is already defined "))
+            let c2 = typingLocal(pt, c)
+            Env.addTypeDef(a, c2.t)
+            f(p, c2.t, a, c2)
+        | _ ->
+            //if (env.map.getOrElse(a, null) != null) {
+            //    throw TypeError(e.pos, a + " is already defined ")
+            //}
+            let c2 =
+                match c with
+                | ELdd (p, _,a) -> ELdd(p,t,a)
+                | ELd (p,_,a) -> ELd(p,t,a)
+                | _ ->
+                    let c2 = typingLocal(pt, c)
+                    if (t <> c2.t) then raise(TypeError(3013,e.pos, "type match error"))
+                    else c2
+            
+            Env.addTypeDef(a, t)
+            f(p, t, a, c2)
+        
+
     match e with
     | EFun(p, t, id, p1, b) ->
         // 関数内関数はエラー
@@ -110,58 +166,9 @@ let rec typingLocal(pt: T, e: E): E =
             raise(TypeError(3007, e.pos, id + " is already defined"))
         Env.addTypeDef(id, t)
         e
-    | EVar(p, t: T, a: string, ENull(_)) -> // ローカル環境に型を保存する
-        if (Env.contains(a)) then
-            raise(TypeError(3008, e.pos, a + " is already defined"))
-        // これはtypedefではないのだけど、addtypedefになってるけど、addはローカル変数のアドレス計算もするのでコレでok
-        Env.addTypeDef(a, t)
-        e
-    // 配列リテラル
-    | EVar(p, t, a, (ECall(pc, _, (EId(idp, _, "Array") as eda), ls) as c)) as ea->
-        if (Env.contains(a)) then
-            raise(TypeError(3009, e.pos, a + " is already defined"))
-        let (tt, t1) =
-            match t with
-            | TArr(t1, size) ->
-                if (size <> (int64 ls.Length)) then
-                    raise (TypeError(3010, e.pos, "array size dont match"))
-                (t, t1)
-            | Tn ->
-                let t1 = typingLocal(Tn, List.head ls).t
-                (TArr(t1, (int64 ls.Length)), t1)
-            | _ -> raise (TypeError(3011, p, "error"))
-
-        let ff (i, l) a1 =
-                (i + 1L, EAssign(p, t1, EArray(p, t1, EId(p, tt, a), ELd(p, Ti(32), i)), typingLocal(t1, a1)) :: l)
-        let (n, l) = List.fold ff (0L, []) ls
-        Env.addTypeDef(a, tt)
-        EBlock(p, t, EVar(p, tt, a, ENull(p)) :: (List.rev l))
-
-    // var a = 1 型推論
-    | EVar(p, Tn, a, c)->
-        if Env.contains(a) then
-            raise(TypeError(3012,e.pos, a + " is already defined "))
-        let c2 = typingLocal(pt, c)
-        Env.addTypeDef(a, c2.t)
-        EVar(p, c2.t, a, c2)
     // var a:t = f
-    | EVar(p, t, a, c) ->
-        //if (env.map.getOrElse(a, null) != null) {
-        //    throw TypeError(e.pos, a + " is already defined ")
-        //}
-        let c2 =
-            match c with
-            | ELdd (p, _,a) -> ELdd(p,t,a)
-            | ELd (p,_,a) -> ELd(p,t,a)
-            | _ ->
-                let c2 = typingLocal(pt, c)
-                if (t <> c2.t) then raise(TypeError(3013,e.pos, "type match error"))
-                else c2
-        
-        Env.addTypeDef(a, t)
-        EVar(p, t, a, c2)
-    | EVal (p, t, a, c) ->
-        raise (TypeError(3014, p, "not implementation local val"))
+    | EVar(p, t, a, c) -> typingLocalVar(p,t,a,c, EVar)
+    | EVal (p, t, a, c) -> typingLocalVar(p,t,a,c, EVal)
     // ここからが文。式との違いは、親が値を求めていないかもしれないと言う事で、必要ない時は値を消す処理をどこかでする必要がある。
     // 親が求めている型は分からないので何ともならないけどw
     // 親が求める型に合わせて、popする式を入れるのは手だろうなと思うのと、そうするとよりunifyな感じになるよなと。
@@ -504,6 +511,7 @@ let rec checkGlobalType(e: Prog):unit =
             raise(TypeError(3040, e.pos, sprintf "syntax error found unexpected expression in global scope %A" e))
     match e with
     | Prog(b) -> List.iter f b
+
 and importFile(file:string):unit =
         
     // 再度読み込み防止

@@ -26,6 +26,7 @@
         <String>LLEmit.fs</String>
         <String>test/Test.fs</String>
         <String>Regexp.fs</String>
+        <String>TransClass.fs</String>
         <String>Main.fs</String>
       </BuildOrder>
     </BuildOrder>
@@ -78,12 +79,14 @@
     <Compile Include="Main.fs" />
     <Compile Include="test\Test.fs" />
     <Compile Include="Regexp.fs" />
+    <Compile Include="TransClass.fs" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\..\Microsoft F#\v4.0\Microsoft.FSharp.Targets" />
   <ItemGroup>
     <Folder Include="test\" />
     <Folder Include="sample\" />
     <Folder Include="download\" />
+    <Folder Include="test\test_val\" />
   </ItemGroup>
   <ItemGroup>
     <None Include="readme.md">
@@ -792,6 +795,12 @@
     <None Include="history.md" />
     <None Include="todo.md" />
     <None Include="test\test_global_var\test_0005.lll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="test\test_val\test_0001.lll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="test\test_val\test_0002.lll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>

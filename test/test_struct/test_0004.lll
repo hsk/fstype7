@@ -3,4 +3,23 @@
 (0,12
 ,)
 result ***/
-def main(){{var a:struct{x:byte; y:byte;};var b:struct{x:byte; y:byte;};var c:struct{x:byte; y:byte;};var p:*(struct{x:byte; y:byte;} );p= &c;a.x=12;c.x=111;p=p+8;print_b(p->x);}}
+def main(){
+	var a:struct{
+		x:byte;
+		y:byte;
+	};
+	var b:struct{
+		x:byte;
+		y:byte;
+	};
+	var c:struct{
+		x:byte;
+		y:byte;
+	};
+	var p:*(struct{x:byte; y:byte;} );
+	p= &c;
+	a.x=12;
+	c.x=111;
+	p=p+8;
+	print_b(p->x);
+}

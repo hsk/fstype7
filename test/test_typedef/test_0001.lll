@@ -3,4 +3,8 @@
 (0,12
 ,)
 result ***/
-def main(){{typedef mylong=long; print_l(12);}}
+
+def main() {
+	typedef mylong=long;
+	print_l(12);
+}

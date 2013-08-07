@@ -1,0 +1,11 @@
+///>name global val long
+/*** result
+(0,12
+,)
+result ***/
+
+val a = 12
+def main() {
+    print_l(a)
+}
+

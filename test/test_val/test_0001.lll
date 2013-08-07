@@ -1,0 +1,11 @@
+///>name local val long
+/*** result
+(0,1
+,)
+result ***/
+
+def main() {
+    val a = 1
+    print_l(a)
+}
+

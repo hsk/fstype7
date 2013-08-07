@@ -3,4 +3,9 @@
 (0,12.000000
 ,)
 result ***/
-def main(){{ var a:double = 10.0 var b:long = 2 a = a + b; print_d(a)}}
+def main(){
+	var a:double = 10.0
+	var b:long = 2
+	a = a + b;
+	print_d(a)
+}

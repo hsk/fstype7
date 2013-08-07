@@ -4,13 +4,16 @@
 33
 ,)
 result ***/
-def main(){
-	var b:struct{
+
+def main() {
+
+	var b:struct {
 		a:byte
-		b:struct{
+		b:struct {
 			c:byte
 		}
 	}
+
 	b.a = 3
 	print_b(b.a)
 	b.b.c = 33

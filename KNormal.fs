@@ -229,10 +229,8 @@ let transPutField(t: T, idx: String, a: R, b: R): R =
  * @return R 返り値レジスタ
 *)
 let rec transLocal(e: E): R =
-    //add(LLNop("f " + e))
-    match e with
 
-    | EVar(p, t, id, c) ->
+    let transLocalVar(p:P, t:T, id:string, c:E): R =
         t.p |> ignore
         let r = RL(t, id)
         add(LLAlloca(r))
@@ -242,7 +240,14 @@ let rec transLocal(e: E): R =
         match c with
         | ENull(_) -> r
         | _ -> transAssign(t, EId(p, t, id), c)
+    
+    //add(LLNop("f " + e))
+    match e with
 
+    | EVar(p, t, id, c) ->
+        transLocalVar(p, t, id, c)
+    | EVal(p, t, id, c) ->
+        transLocalVar(p, t, id, c)
     | ETypeDef(p, t, id) ->
         Env.addTypeDef(id, t)
         RNULL
@@ -516,8 +521,7 @@ and transAssign(t: T, a: E, b: E): R =
  *
  *)
 let transGlobal(e: E):unit =
-    match e with
-    | EVar(p, t, id, e) ->
+    let transGlobalVar(p:P,t:T,id:string,e:E):unit =
         t.p |> ignore
         match (t, e) with
         | (t, ELd(p, _, v)) -> add(LLGlobal(RG(t, id), RN(t, v.ToString())))
@@ -533,6 +537,9 @@ let transGlobal(e: E):unit =
         | (t, ENull(p)) -> add(LLGlobal(RG(t, id), RNULL))
         | _ -> raise (TypeError(4009,e.pos,"error"))
 
+    match e with
+    | EVar(p, t, id, e) -> transGlobalVar(p, t, id, e)
+    | EVal(p, t, id, e) -> transGlobalVar(p, t, id, e)
     | EFun(p, t, n, prm, b) ->
         Env.init(prm)
         let oldOutputBuf = outputBuffer
