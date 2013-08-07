@@ -28,8 +28,17 @@ type ConstFold(parent: Option<ConstFold>) =
      *)
     member this.expand(v: R): R =
         if (v = RNULL) then v
-        else if (map.ContainsKey(v.id)) then this.expand(match map.TryFind(v.id) with | Some(a) -> a | None -> v )
-        else match parent with | Some(p) -> p.expand(v) | None -> v
+        else if (map.ContainsKey(v.id)) then
+            //let isVar = Env.checkVar(v.id)
+            //if isVar then
+            //    v
+            //else
+                this.expand(match map.TryFind(v.id) with | Some(a) -> a | None -> v )
+        else
+            match parent with
+            | Some(p) ->
+                p.expand(v)
+            | None -> v
     (**
      * Rのリストを展開します
      *)
@@ -80,18 +89,20 @@ type ConstFold(parent: Option<ConstFold>) =
             | LLGoto _ -> add(l)
             | LLFun(t, n, p, env, ls, r) ->
                 let cf = new ConstFold(Some(this))
+                //let oldenv = Env.copy()
+                //Env.load(env)
                 add(LLFun(t, n, p, env, cf.fold(ls), cf.expand(r)))
+                //Env.load(oldenv)
             | LLNop _ -> add(l)
             | LLJne(r, a, b, c) -> add(LLJne(this.expand(r),a,b,c))
             | LLPhi(reg: R, l1: string, l2: string, t: T, r1: R, r2: R) ->
                 add(LLPhi(this.expand(reg), l1, l2, t, this.expand(r1), this.expand(r2)))
-            | LLGlobal(s, d) -> add(l)
-              (*
-              kNormal.tName2(s.t) match {
-                | "" -> map = map + (s.id -> d)
-                | _ ->
-              }
-              add(l)*)
+            | LLGlobal(s, d) ->
+                (*if (GlobalEnv.checkVal(s.id)) then
+                    match KNormal.tName2(s.t) with
+                    | "" -> map <- map.Add(s.id, d)
+                    | _ -> ()*)
+                add(l)
             | LLLoadCStr _ -> add(l)
 
         List.iter f ls
@@ -118,5 +129,6 @@ type ConstFold(parent: Option<ConstFold>) =
  * エントリポイント
  *)
 let apply(ls: LL list): LL list =
+    //Env.init([])
     let cf = new ConstFold(None)
     cf.fold(ls)

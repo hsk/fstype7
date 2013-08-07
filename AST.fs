@@ -292,7 +292,7 @@ type LL =
     (** フィールドアクセス疑似命令 *)
     | LLField of R * R * R * R
     (** 関数 *)
-    | LLFun of T * string * (string *T) list * (string * T) list * LL list * R
+    | LLFun of T * string * (string *T) list * ((string * T) list * string list) * LL list * R
 
     (** コメント *)
     | LLNop of string

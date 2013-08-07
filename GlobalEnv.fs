@@ -5,6 +5,9 @@ module GlobalEnv
 
 open AST
 
+(** val list *)
+let mutable globalVals:string list = []
+
 (**
  * 初期化
  *)
@@ -26,6 +29,7 @@ let init() =
       "float", Tf
     ]
     structs <- []
+    globalVals <- []
     ()
 
 init() |> ignore
@@ -62,3 +66,19 @@ let contains(id:string):bool =
         true
     with
         e -> false
+        
+(**
+ * valの追加
+ *)
+let addVal(id: string):unit =
+    globalVals <- id :: globalVals
+
+let checkVal(id: string):bool =
+    match List.tryFind (fun a -> a = id) globalVals with
+    | None -> false
+    | Some _ -> true
+
+let checkVar(id: string):bool =
+    match List.tryFind (fun a -> a = id) globalVals with
+    | None -> contains(id)
+    | Some _ -> true

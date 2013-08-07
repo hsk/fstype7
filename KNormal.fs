@@ -535,7 +535,7 @@ let transGlobal(e: E):unit =
                 | _ -> raise (TypeError(4008,e.pos,sprintf "error expression %A" e))
             add(LLGlobal(RG(t, id), RN(t, p(v))))
         | (t, ENull(p)) -> add(LLGlobal(RG(t, id), RNULL))
-        | _ -> raise (TypeError(4009,e.pos,"error"))
+        | _ -> raise (TypeError(4009, p,sprintf "error global var need constant expression %A" (p,t,id,e) ))
 
     match e with
     | EVar(p, t, id, e) -> transGlobalVar(p, t, id, e)

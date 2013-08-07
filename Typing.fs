@@ -168,7 +168,10 @@ let rec typingLocal(pt: T, e: E): E =
         e
     // var a:t = f
     | EVar(p, t, a, c) -> typingLocalVar(p,t,a,c, EVar)
-    | EVal (p, t, a, c) -> typingLocalVar(p,t,a,c, EVal)
+    | EVal (p, t, a, c) ->
+        Env.addVal(a)
+        typingLocalVar(p,t,a,c, EVal)
+        
     // ここからが文。式との違いは、親が値を求めていないかもしれないと言う事で、必要ない時は値を消す処理をどこかでする必要がある。
     // 親が求めている型は分からないので何ともならないけどw
     // 親が求める型に合わせて、popする式を入れるのは手だろうなと思うのと、そうするとよりunifyな感じになるよなと。
@@ -245,6 +248,13 @@ let rec typingLocal(pt: T, e: E): E =
     | EBin(p, t: T, it: T, i, a: E, b: E) ->
         autoCastBinT(e, typingLocal(pt, a), typingLocal(pt, b))
     | EAssign(p, t, a: E, b: E) ->
+        match a with
+        | EId(p,t,id) ->
+            if(Env.checkVal(id)) then
+                raise(TypeError(3041,p,sprintf "cannot assign val value %s" id))
+            else ()
+        | _ -> ()
+        
         // printfn "EAssign pt=%A %A" pt e
         let rc = unifyBinT(e, typingLocal(pt, a), typingLocal(pt, b))
         // printfn "EAssign rc=%A" rc
@@ -467,6 +477,7 @@ let typingGlobal(e: E): E =
     | EVal(p, t, b, c) ->
         let (b1, t1, e1) = typingGlobalVar(EVal, p, t, b, c)
         GlobalEnv.add(b1, t1)
+        GlobalEnv.addVal(b1)
         e1
     | EImport _ -> e
     | ETypeDef _ -> e
@@ -499,9 +510,11 @@ let rec checkGlobalType(e: Prog):unit =
         | EVal(p, Tn, a, c) ->
             let c2 = typingLocal(Tn, c)
             GlobalEnv.add(a, c2.t)
+            GlobalEnv.addVal(a)
         // 変数を環境に保存
         | EVal(p, t, id, a) ->
             GlobalEnv.add(id, t)
+            GlobalEnv.addVal(id)
 
         // 何かの残骸は読み捨て
         | ENop _ -> ()

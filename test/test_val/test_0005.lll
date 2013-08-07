@@ -1,0 +1,14 @@
+///>name global val long and local var a
+/*** result
+(0,12
+2
+,)
+result ***/
+
+val a = 12
+def main() {
+	print_l(a)
+	var a = 1
+	a = 2
+    print_l(a)
+}

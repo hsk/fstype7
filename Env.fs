@@ -6,23 +6,27 @@ module Env
 open AST
 open System
 
-(** ファイル名 *)
-let mutable filename = ""
+(** val list *)
+let mutable envVals:string list = []
 
 (**
  * 環境のコピー
  *)
-let copy(): (string *T) list = envmap
+let copy(): (string *T) list * string list = (envmap, envVals)
 
 (**
  * 環境の読み込み
  *)
-let load(e: (string *T) list):unit = envmap <- e
-
+let load(e: (string *T) list * string list):unit =
+    match e with
+    | (e,v) ->
+        envmap <- e
+        envVals <- v
 (**
  * 環境の初期化
  *)
-let init(p: (string *T) list):unit = load(p)
+let init(p: (string *T) list):unit =
+    load(p,[])
 
 (**
  * シンボル検索
@@ -65,6 +69,7 @@ let findR(id: string):R =
  *)
 let addTypeDef(id: string, t: T):unit =
     envmap <- (id, t) :: envmap
+
 let getFieldNo(id: string, field: string):int =
     match mapfind(id) with
     | TStr(m) ->
@@ -99,3 +104,23 @@ let rec size(t: T): int64 =
     | TFun _ -> 8L
     | Tn -> -1L
     | _ -> raise(TypeError(3704, P0, "size calculate error"))
+
+(**
+ * valの追加
+ *)
+let addVal(id: string):unit =
+    envVals <- id :: envVals
+
+let checkVal(id: string):bool =
+    match List.tryFind (fun a -> a = id) envVals with
+    | None ->
+        if contains(id) then false
+        else GlobalEnv.checkVal(id)
+    | Some _ -> true
+
+let checkVar(id: string):bool =
+    match List.tryFind (fun a -> a = id) envVals with
+    | None ->
+        if contains(id) then true
+        else GlobalEnv.checkVar(id)
+    | Some _ -> false

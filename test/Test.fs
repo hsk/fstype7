@@ -81,7 +81,9 @@ let test file =
         with
             | AST.TypeError(no,p,m) as e ->
                 printfn "%d %s '%s'" p.no m expected
-                if expected = "(null)" then () else raise e
+                if expected = "(null)" then ()
+                else if expected = "("+no.ToString()+")" then ()
+                else raise e
             | e ->
                 printfn "%s" e.StackTrace
                 if expected = "(null)" then () else raise e

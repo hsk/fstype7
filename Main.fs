@@ -182,6 +182,9 @@ let test_main(args: string []):int =
         benchStart()
         Test.test("test/test_val/test_0001.lll")
         Test.test("test/test_val/test_0002.lll")
+        Test.test("test/test_val/test_0003.lll")
+        Test.test("test/test_val/test_0004.lll")
+        Test.test("test/test_val/test_0005.lll")
         //Test.test("test/test_global_var/test_0005.lll")
         // Test.test("test/test_global_var/test_0004.lll")
         //        Test.test("test/test_byte/test_0006.lll")
@@ -259,7 +262,7 @@ let main2 (args:string []):int =
                 let oname = Regex(".lll$").Replace(name, ".o")
                 let src = Exec.readAll(name)
                 imports <- name :: imports
-                Env.filename <- name
+                //Env.filename <- name
                 comp(sname, opt, src)
                 oname::fs
                                 
