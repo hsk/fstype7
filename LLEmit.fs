@@ -123,7 +123,7 @@ let rec output(l: LL):unit =
 
     | LLField(r: R, addr: R, zero: R, a: R) ->
         match addr.t.stripType(P0, []) with
-        | Tp((TArr _ | TStr _ ) as tt) ->
+        | Tp((TArr _ | TStr _ | TCls _) as tt) ->
             p(r, "getelementptr inbounds " + addr.t.p + " " + addr.p + ", " + zero.t.p + " " + zero.p + ", " + a.t.p + " " + a.p)
         | _ ->
             p(r, "getelementptr inbounds " + addr.t.p + " " + addr.p + ", " + a.t.p + " " + a.p)
@@ -236,6 +236,9 @@ let apply(file: string, ls: LL list):unit =
 
     List.iter (function
     | (TStr(ls:(string * T) list), r1:R) ->
+        let ts = System.String.Join(", ", List.map (function | (_, t1:T) -> t1.p) ls)
+        Asm.p(r1.p + " = type { " + ts + " }")
+    | (TCls(ls:(string * T) list), r1:R) ->
         let ts = System.String.Join(", ", List.map (function | (_, t1:T) -> t1.p) ls)
         Asm.p(r1.p + " = type { " + ts + " }")
     | _ -> ()

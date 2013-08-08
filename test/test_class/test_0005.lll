@@ -1,0 +1,14 @@
+///>name classのポインタ演算
+/*** result
+(0,10
+,)
+result ***/
+def main(){
+	typedef ABC = class{
+		x:int
+		y:int
+	}
+	var a = new ABC
+	a.x = 10
+	print_i(a.x)
+}

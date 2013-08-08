@@ -41,6 +41,7 @@ let rec tName2(t: T): string =
     | TDef(id) -> tName2(Env.find(id))
     | TArr _ -> "p"
     | TStr _ -> "p"
+    | TCls _ -> "p"
     | TFun _ -> "p"
     | Tp _ -> "a"
     | Tr _ -> "a"
@@ -175,6 +176,12 @@ let transAStore(t: T, e: R, idx: R, b: R): R =
 let rec getOffset(t: T, x: String) =
     match t.stripType(P0, []) with
     | TStr(m) ->
+        let rec ck(m1: (string * T) list, s: int64): (T * int64) =
+            match m1 with
+            | [] -> raise(TypeError(4001,P0,sprintf "error %A is not have %A"  m x))
+            | (name, t) :: xs -> if (name = x) then (t, s) else ck(xs, s + 1L)
+        ck(m, 0L)
+    | TCls(m) ->
         let rec ck(m1: (string * T) list, s: int64): (T * int64) =
             match m1 with
             | [] -> raise(TypeError(4001,P0,sprintf "error %A is not have %A"  m x))
@@ -522,18 +529,18 @@ and transAssign(t: T, a: E, b: E): R =
  *)
 let transGlobal(e: E):unit =
     let transGlobalVar(p:P,t:T,id:string,e:E):unit =
+        let rec p2 (e:E):string =
+            match e with
+            | ELd(p, _, v) -> v.ToString()
+            | ELdd(p, _, v) -> v.ToString()
+            | ETuple(p1, _, ls) -> "{" + String.Join(", ", List.map (fun (l:E) -> l.t.p + " " + p2(l)) ls) + "}"
+            | _ -> raise (TypeError(4008,e.pos,sprintf "error expression %A" e))
         t.p |> ignore
         match (t, e) with
         | (t, ELd(p, _, v)) -> add(LLGlobal(RG(t, id), RN(t, v.ToString())))
         | (t, ELdd(p, _, v)) -> add(LLGlobal(RG(t, id), RN(t, v.ToString())))
-        | (TStr _ , (ETuple(p, _, _)as v) ) ->
-            let rec p (e:E):string =
-                match e with
-                | ELd(p, _, v) -> v.ToString()
-                | ELdd(p, _, v) -> v.ToString()
-                | ETuple(p1, _, ls) -> "{" + String.Join(", ", List.map (fun (l:E) -> l.t.p + " " + p(l)) ls) + "}"
-                | _ -> raise (TypeError(4008,e.pos,sprintf "error expression %A" e))
-            add(LLGlobal(RG(t, id), RN(t, p(v))))
+        | (TStr _ , (ETuple(p, _, _)as v) ) -> add(LLGlobal(RG(t, id), RN(t, p2(v))))
+        | (TCls _ , (ETuple(p, _, _)as v) ) -> add(LLGlobal(RG(t, id), RN(t, p2(v))))
         | (t, ENull(p)) -> add(LLGlobal(RG(t, id), RNULL))
         | _ -> raise (TypeError(4009, p,sprintf "error global var need constant expression %A" (p,t,id,e) ))
 

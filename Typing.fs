@@ -330,6 +330,11 @@ let rec typingLocal(pt: T, e: E): E =
                 | None ->
                     raise( TypeError(3019, e.pos, "has not have " + a2.t.ttos + " " + id))
                 | Some(s,t) -> t 
+            | TCls(m) ->
+                match List.tryFind (fun (s,_) -> s = id) m with
+                | None ->
+                    raise( TypeError(3042, e.pos, "has not have " + a2.t.ttos + " " + id))
+                | Some(s,t) -> t 
             | Tp(t1) -> f(t1)
             | _ -> raise( TypeError(3020,p,"error"))
         EField(p, f(a2.t), a2.t, a2, id)

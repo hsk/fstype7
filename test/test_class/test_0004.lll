@@ -1,0 +1,25 @@
+///>name classのポインタ演算
+/*** result
+(0,12
+,)
+result ***/
+def main(){
+	var a:class{
+		x:byte;
+		y:byte;
+	};
+	var b:class{
+		x:byte;
+		y:byte;
+	};
+	var c:class{
+		x:byte;
+		y:byte;
+	};
+	var p:*(class{x:byte; y:byte;} );
+	p= &c;
+	a.x=12;
+	c.x=111;
+	p=p+8;
+	print_b(p.x);
+}

@@ -1,0 +1,21 @@
+///>name class
+/*** result
+(0,3
+33
+,)
+result ***/
+
+def main() {
+
+	var b:class {
+		a:byte
+		b:class {
+			c:byte
+		}
+	}
+
+	b.a = 3
+	print_b(b.a)
+	b.b.c = 33
+	print_b(b.b.c)
+}

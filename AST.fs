@@ -65,6 +65,7 @@ exception TypeError of int * P * string
 // 3038
 // 3039
 // 3040
+// 3041
 // 3500 - AST
 // 3501 ttos error
 // 3502 tName error
@@ -122,6 +123,10 @@ type T =
     | TDef of string
     (** 関数型 *)
     | TFun of T * T list
+    (** class型 *)
+    | TCls of (string * T) list
+    (** delegate 型 *)
+    //| TDel of T * T * T list
 
 (**
  * 抽象構文木
@@ -203,7 +208,9 @@ type E =
     | ETuple of P * T * E list
     (** 多値 *)
     | EImport of P * string
+    (** null *)
     | ENull of P
+
 (**
  * 二項演算子の構築用
  *)
@@ -390,6 +397,12 @@ type T with
                     structs <- a :: structs
                     List.iter (fun (id,t) -> add(t , RL(t, GenId.genid(".struct")))) ls
                 | _ -> ()
+            | (TCls(ls) as t,_) ->
+                match (List.tryFind (fun (t1,r) -> t=t1) structs) with
+                | None ->
+                    structs <- a :: structs
+                    List.iter (fun (id,t) -> add(t , RL(t, GenId.genid(".class")))) ls
+                | _ -> ()
             | (TDef(id) as t,_) -> add((t, RL(T.find(id), GenId.genid(".struct"))))
             | _ -> ()
         add(a)
@@ -426,6 +439,11 @@ type T with
                 match b with
                 | (s, t:T) -> a + " " + s + ":" + t.ttos
             "struct{" + (List.fold f "" members) + " }"
+        | TCls(members: (string * T) list)->
+            let f a b = 
+                match b with
+                | (s, t:T) -> a + " " + s + ":" + t.ttos
+            "class{" + (List.fold f "" members) + " }"
         | TDef(id: String)-> id
         | TFun(t, prms)->
             "(" + System.String.Join(", ", List.map (fun (t:T) -> t.ttos) prms) + ")->" + t.ttos
@@ -451,6 +469,7 @@ type T with
         | TDef(id)-> T.find(id).tName
         | TArr _ -> "p"
         | TStr _ -> "p"
+        | TCls _ -> "p"
         | TFun _ -> "p"
         | Tp _ -> "a"
         | Tr _ -> "a"
@@ -472,6 +491,7 @@ type T with
                 with
                 | _ -> raise(TypeError(3506, p, "not found typename "+id))
         | TStr(m) -> TStr(List.map (fun (id,t:T)->(id, t.stripType(p, set))) m)
+        | TCls(m) -> TCls(List.map (fun (id,t:T)->(id, t.stripType(p, set))) m)
         | TArr(t1, size) -> TArr(t1.stripType(p, set), size)
         | Tp(t1) -> Tp(t1.stripType(p, set))
         | _ -> this
@@ -497,6 +517,15 @@ type T with
             match (List.tryFind (fun (t,r) -> t=this) structs) with
             | None ->
                 let id = GenId.genid(".struct")
+                structs <- (this , RL(this, id)) :: structs
+                List.iter (fun (id,t:T) -> t.p |> ignore) ls
+            | _ -> ()
+            let r = T.structsfind(this)
+            r.p
+        | TCls ls ->
+            match (List.tryFind (fun (t,r) -> t=this) structs) with
+            | None ->
+                let id = GenId.genid(".class")
                 structs <- (this , RL(this, id)) :: structs
                 List.iter (fun (id,t:T) -> t.p |> ignore) ls
             | _ -> ()

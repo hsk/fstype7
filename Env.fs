@@ -71,14 +71,14 @@ let addTypeDef(id: string, t: T):unit =
     envmap <- (id, t) :: envmap
 
 let getFieldNo(id: string, field: string):int =
+    let rec getNo(no:int, m:(string * T) list):int =
+        match m with
+        | [] -> raise (TypeError(3702, P0, "not found " + field))
+        | (name,t)::xs when (name = field) -> no
+        | x::xs -> getNo(no + 1, xs)
     match mapfind(id) with
-    | TStr(m) ->
-        let rec getNo(no:int, m:(string * T) list):int =
-            match m with
-            | [] -> raise (TypeError(3702, P0, "not found " + field))
-            | (name,t)::xs when (name = field) -> no
-            | x::xs -> getNo(no + 1, xs)
-        getNo(0, m)
+    | TStr(m) -> getNo(0, m)
+    | TCls(m) -> getNo(0, m)
     | _ -> raise(TypeError(3703, P0, "error"))
 
 (**
@@ -101,6 +101,7 @@ let rec size(t: T): int64 =
     | TDef(id) -> size(find(id)) 
     | TArr(t, s) -> size(t) * s
     | TStr(m) -> List.fold (fun a (t, b) -> a + size(b)) 0L m
+    | TCls(m) -> List.fold (fun a (t, b) -> a + size(b)) 0L m
     | TFun _ -> 8L
     | Tn -> -1L
     | _ -> raise(TypeError(3704, P0, "size calculate error"))

@@ -47,6 +47,7 @@ let rec t(st: Token): T =
     | Id(_, "void") -> Tv
     | Pre(Id(_, "*"), a) -> Tp(t(a))
     | Msg(Id(_, "struct"), Id(_, "{"), b, Id(_, "}")) -> TStr(members(b, []))
+    | Msg(Id(_, "class"), Id(_, "{"), b, Id(_, "}")) -> TCls(members(b, []))
     | Prn(Id(_, "("), a, Id(_, ")")) -> t(a)
     | Id(_, s) -> TDef(s)
     | o ->
