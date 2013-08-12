@@ -20,6 +20,7 @@ type Token with
  *)
 let rec findToken(a: Token): Token = a.first
 
+let mutable globals:E list = []
 (**
  * 複数の式の変換
  *)
@@ -46,12 +47,16 @@ let rec t(st: Token): T =
     | Id(_, "double") -> Td
     | Id(_, "void") -> Tv
     | Pre(Id(_, "*"), a) -> Tp(t(a))
-    | Msg(Id(_, "struct"), Id(_, "{"), b, Id(_, "}")) -> TStr(members(b, []))
-    | Msg(Id(_, "class"), Id(_, "{"), b, Id(_, "}")) -> TCls(members(b, []))
+    | Msg(Id(_, "struct"), Id(_, "{"), b, Id(_, "}")) -> TStr(members("", b, []))
     | Prn(Id(_, "("), a, Id(_, ")")) -> t(a)
     | Id(_, s) -> TDef(s)
     | o ->
         raise(SyntaxError(2002, o.pos, "error syntax error " + o.first.ToString() + " " + o.ToString()))
+and tc(id:string, st:Token): T =
+    match st with
+    | Msg(Id(_, "class"), Id(_, "{"), b, Id(_, "}")) -> TCls(members(id, b, []))
+    | Msg(Id(_, "struct"), Id(_, "{"), b, Id(_, "}")) -> TStr(members(id, b, []))
+    | _ -> t(st)
 
 (**
  * 型リストの変換
@@ -70,19 +75,50 @@ and ts(st: Token): T list =
 (**
  * 構造体のメンバの変換
  *)
-and members(st: Token, m: (string * T) list): (string * T) list =
+and members(id:string, st: Token, m: (string * T) list): (string * T) list =
     //println("members "+st)
     match st with
     | Id(_, "void") -> m
     | Bin(Id(_, a), Id(_, ":"), b) -> (a, t(b)) :: m
-    | Pst(a, Id(_, ";")) -> members(a, m)
-    | Bin(a, Id(_, "@"), b) -> members(a, members(b, m))
+    | Pst(a, Id(_, ";")) -> members(id, a, m)
+    | Bin(a, Id(_, "@"), b) -> members(id, a, members(id, b, m))
+    | Bin(Pre((Id(_, "def") as d1),
+              Bin(Msg(Id(idp, name), (Id(_, "(") as d2), r, (Id(_, ")") as d3)), (Id(_, ":") as d4), typ)),
+          (Id(_, "=") as d5),
+          b) ->
+        let t1 = TDlg(t(typ), TThis, (List.map (fun (id, t) -> t) (fprms r)))
+        let r2 =Bin(Bin(Id(P0,"this"),Id(P0,":"),Pre(Id(P0,"*"),Id(P0, id))), Id(P0,",") , r)
+        globals <- f(
+            Bin(Pre(d1, Bin(Msg(Id(idp, id+"_"+name), d2, r2, d3), d4, typ)), d5, b)
+        )::globals
+        (name, t1) :: m
+    | Pre(Id(_, "def") as d1,
+          Msg(Msg(Id(idp, name), (Id(_, "(") as d2), r, (Id(_, ")") as d3)), (Id(_, "{") as d4), e, (Id(_, "}") as d5))) ->
+        let r2 =Bin(Bin(Id(P0,"this"),Id(P0,":"),Pre(Id(P0,"*"),Id(P0, id))), Id(P0,",") , r)
+        
+        match name with
+        | "this" -> (* constructor *)
+            
+            globals <- f(
+                Pre(d1, Msg(Msg(Id(idp, id+"_"+name), d2, r2, d3), d4, e, d5))
+            )::globals
+            let t1 = TDlg(Tv, TThis, List.map (fun (id, t) -> t) (fprms r))
+            (name, t1) :: m
+        | _ ->
+            globals <- f(
+                Pre(d1, Msg(Msg(Id(idp, id+"_"+name), d2, r2, d3), d4, e, d5))
+            )::globals
+            let t1 = TDlg(Tv, TThis, List.map (fun (id, t) -> t) (fprms r))
+            (name, t1) :: m
+    | Pre(Id(_, "def"), Bin(Msg(Id(_, name), Id(_, "("), r, Id(_, ")")), Id(_, ":"), typ)) ->
+        let t1 = TDlg(t(typ), TThis, List.map (fun (id, t) -> t) (fprms r))
+        (name, t1) :: m
     | o -> raise(SyntaxError(2003, o.pos, "error syntax error " + o.first.ToString() + " " + o.ToString()))
 
 (**
  * 関数のパラメータの変換
  *)
-let fprms(st: Token): (string * T) list =
+and fprms(st: Token): (string * T) list =
     let rec ff(st: Token, m: (string * T) list): (string * T) list =
         match st with
         | Bin(a, Id(_, ","), b) -> ff(b, ff(a, m))
@@ -97,7 +133,7 @@ let fprms(st: Token): (string * T) list =
  * @param st: Any 変換元のcompactデータ
  * @return E 式
  *)
-let rec f(o: Token): E =
+and f(o: Token): E =
     // println("f "+st)
     match o with
     | Pre(Id(_, "import"), f) ->
@@ -164,7 +200,7 @@ let rec f(o: Token): E =
     | Pst(a, (Id(_, "--") as o)) -> f(Bin(a, Id(o.pos, "="), Bin(a, Id(o.pos, "-"), Lng(o.pos, 1L))))
     | Pst(a, Id(_, ";")) -> f(a)
     | Pre(Id(_, "var"), Bin(Id(_, a), Id(_, ":"), b)) -> EVar(o.p, t(b), a, ENull(o.p))
-    | Pre(Id(_, "typedef"), Bin(Id(_, a), Id(_, "="), b)) -> ETypeDef(o.p, t(b), a)
+    | Pre(Id(_, "typedef"), Bin(Id(_, a), Id(_, "="), b)) -> ETypeDef(o.p, tc(a, b), a)
     | Id(_, "void") -> ENop(o.p, Tv, "void")
     | Id(_, "break") -> EBreak(o.p, Tn)
     | Id(_, "continue") -> EContinue(o.p, Tn)
@@ -175,9 +211,6 @@ let rec f(o: Token): E =
     | Bin(a, Id(_, "."), Id(_, b)) ->
         let o = f(a)
         EField(o.pos, Tn, Tn, o, b)
-    | Bin(a, Id(_, "->"), Id(_, b)) ->
-        let o = f(a)
-        EArrow(o.pos, Tn, Tn, o, b)
     | St(Id(_, "if"), Id(_, "("), a, Id(_, ")"), Bin(b, Id(_, "else"), c)) ->
         EIf(o.p, Tn, f(a), f(b), f(c))
     | St(Id(_, "if"), Id(_, "("), a, Id(_, ")"), b) ->
@@ -289,5 +322,7 @@ and prms(st: Token): E list =
     | a -> [f(a)]
 
 let apply(st: Token): Prog =
-    Prog(fs(st))
+    globals <- []
+    let ls = fs(st)
+    Prog(globals @ ls)
 

@@ -284,6 +284,22 @@ let rec transLocal(e: E): R =
         add(LLCall(r, RG(Tp(Ti(8)), "malloc"), [RN(Ti(64), Env.size(t).ToString())]))
         add(LLCast(r2, r))
         if not(GlobalEnv.contains("malloc")) then GlobalEnv.add("malloc", TFun(Tp(Ti(8)), [Ti(64)]))
+        add(LLNop(sprintf "t=%A" (t.stripType(P0, []))))
+        match t.stripType(P0, []) with
+        | TCls(ls) as tc -> // class
+            //add(LLNop(sprintf "ls=%A" ls))
+            let f (no:int)(id:string, td:T) :int =
+                //add(LLNop(sprintf "td=%A" td))
+                match td with
+                | TDlg(t1,t2, tls) -> // added delegate to struct data
+                    //add(LLNop(sprintf "--------"))
+                    transAStore(td, r2, RN(Ti(32), no.ToString()), RG(td, tc.findDefName+"_"+id)) |> ignore
+                    //add(LLNop(sprintf "--------"))
+                    no + 1
+                | _ -> no + 1
+            List.fold f 0 ls |> ignore
+        | _ -> ()
+        
         r2
 
     | EGCNew(p, Tp(t)) ->
@@ -291,6 +307,7 @@ let rec transLocal(e: E): R =
         let ft = TFun(Tp(Ti(8)), [Ti(64)])
         add(LLCall(r, RG(ft, "newobj"), [RN(Ti(64), Env.size(t).ToString())]))
         add(LLCast(r2, r))
+        
         GlobalEnv.add("newobj", ft)
         r2
 
@@ -324,19 +341,17 @@ let rec transLocal(e: E): R =
         let r = genRL(t)
         add(LLUnary(r, "not", transLocal(a)))
         r
-    | EArray _ | EField _ | EPtr _ | EArrow _ | EId _ -> transField(e)
+    | EArray _ | EField _ | EPtr _ | EId _ -> transField(e)
     | EAssign(p, t, a, b) -> transAssign(t, a, b)
-    | ECall(p, t, EId(p2, ft, n), l1) when ((not (Env.contains(n))) && GlobalEnv.contains(n)) ->
-        let r = genRL(t)
-        add(LLCall(r, Env.findR(n), List.map transLocal l1))
-        r
 
     | ECall(p, t, fe, l1) ->
+    
         let l2 = List.map transLocal l1
         let l3 = transLocal(fe)
         let r = genRL(t)
         add(LLCall(r, l3, l2))
         r
+
 
     | ENop(p, t, a) ->
         add(LLNop(a)); RNULL
@@ -498,7 +513,6 @@ and transField(e: E): R =
     | EArray(p, t, e, idx) -> transALoad(t, transField(e), transLocal(idx))
     | EPtr(p, t, e) -> transALoad(t, transField(e), RN(Ti(64), "0"))
     | EField(p, _, t, e, idx) -> transGetField(t, idx, transField(e))
-    | EArrow(p, _, t, e, idx) -> transGetField(t, idx, transField(EPtr(p, t, e)))
     | _ -> raise(TypeError(4006,e.pos,sprintf "error %A" e))
 
 (**
@@ -518,7 +532,6 @@ and transAssign(t: T, a: E, b: E): R =
         let e2 = transField(e)
         let b2 = transLocal(b)
         transPutField(t, idx, e2, b2)
-    | EArrow(p, _, t, e, idx) -> transPutField(t, idx, transField(EPtr(p, t, e)), transLocal(b))
     | _ -> raise (TypeError(4007, a.pos, sprintf "error assign %A %A %A" t a b))
 
 (**
@@ -571,7 +584,15 @@ let transGlobal(e: E):unit =
         outputBuffer <- oldOutputBuf
         add(fn)
 
-    | ETypeDef(p, t, id) -> ()
+    | ETypeDef(p, t, id) ->
+        match t with
+        | TCls(ls:(string * T) list) ->
+            let f (id:string,t:T):unit =
+                match t with
+                | TDlg(t1,t2,ls) -> ()
+                | _ -> ()
+            List.iter f ls
+        | _ -> ()
     | ENop _ -> ()
     | EImport _ -> ()
     | _ -> raise (TypeError(4010,e.pos,sprintf "error global value %A " e))

@@ -180,11 +180,14 @@ let rec opts(args:string list, m:Opts) :Opts =
 let test_main(args: string []):int =
     try
         benchStart()
+        (*
         Test.test("test/test_val/test_0001.lll")
         Test.test("test/test_val/test_0002.lll")
         Test.test("test/test_val/test_0003.lll")
         Test.test("test/test_val/test_0004.lll")
         Test.test("test/test_val/test_0005.lll")
+        *)
+        Test.test("test/test_class/test_0008.lll")
         //Test.test("test/test_global_var/test_0005.lll")
         // Test.test("test/test_global_var/test_0004.lll")
         //        Test.test("test/test_byte/test_0006.lll")
@@ -261,7 +264,7 @@ let main2 (args:string []):int =
                 let sname = Regex(".lll$").Replace(name, ".s")
                 let oname = Regex(".lll$").Replace(name, ".o")
                 let src = Exec.readAll(name)
-                imports <- name :: imports
+                //imports <- name :: imports
                 //Env.filename <- name
                 comp(sname, opt, src)
                 oname::fs
@@ -297,11 +300,11 @@ let main2 (args:string []):int =
         printfn "%A" e
         1
 
-
 [<EntryPoint>]
 let main(args:string []):int =
-    test_main args
+    //test_main args
     // main1 args
-    // main2 args
+    main2 args
     //main2 ("sample/opengl.lll sample/program.lll -run -framework OpenGL -framework glut".Split(' '))
     //main2 ("sample/opengl.lll sample/shoot.lll -run -framework OpenGL -framework glut".Split(' '))
+    //0

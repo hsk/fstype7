@@ -103,6 +103,7 @@ let rec size(t: T): int64 =
     | TStr(m) -> List.fold (fun a (t, b) -> a + size(b)) 0L m
     | TCls(m) -> List.fold (fun a (t, b) -> a + size(b)) 0L m
     | TFun _ -> 8L
+    | TDlg _ -> 8L
     | Tn -> -1L
     | _ -> raise(TypeError(3704, P0, "size calculate error"))
 

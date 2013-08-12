@@ -87,10 +87,6 @@ let rec f(e: E, env: Map<string, string>): E * Map<string, string> =
             let (a1, env1) = f(a, env)
             let (b1, env2) = f(b, env1)
             (EArray(p,t,a1,b1), env)
-        | EArrow(p, t, t2, a, b) ->
-            let (a1, env1) = f(a, env)
-            (EArrow(p,t,t2, a1, b), env)
-        
         | EBreak(p,_) -> (e, env)
         | ECase(p,t, a, b) ->
             let (a1, env1) = f(a, env)
@@ -113,6 +109,9 @@ let rec f(e: E, env: Map<string, string>): E * Map<string, string> =
         | EFun(p, t, a, b, c) ->
             let (c1,env1) = f(c,env)
             (EFun(p,t,a,b,c1), env)
+        | EMethod(p, t, a, b, c) ->
+            let (c1,env1) = f(c,env)
+            (EMethod(p,t,a,b,c1), env)
         | EGCNew(p,_) -> (e, env)
         | EGoto(p,_, _) -> (e, env)
         | EIf(p,t, a, b, c) ->

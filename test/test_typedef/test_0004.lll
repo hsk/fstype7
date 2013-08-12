@@ -16,5 +16,5 @@ def main(){
 	p= &c;
 	a.x = 12;
 	p = p + 2;
-	print_i(p->x);
+	print_i(p.x);
 }

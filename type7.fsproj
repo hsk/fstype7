@@ -44,7 +44,7 @@
         <Command type="BeforeExecute" />
       </CustomCommands>
     </CustomCommands>
-    <Commandlineparameters>sample/hello.lll -run</Commandlineparameters>
+    <Commandlineparameters>sample/shoot.lll sample/opengl.lll -framework OpenGL -framework glut -run</Commandlineparameters>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x86' ">
     <DebugSymbols>true</DebugSymbols>
@@ -79,7 +79,6 @@
     <Compile Include="Main.fs" />
     <Compile Include="test\Test.fs" />
     <Compile Include="Regexp.fs" />
-    <Compile Include="TransClass.fs" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\..\Microsoft F#\v4.0\Microsoft.FSharp.Targets" />
   <ItemGroup>
@@ -832,6 +831,12 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="test\test_class\test_0007.lll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="test\test_class\test_0008.lll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="test\test_class\test_0009.lll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>

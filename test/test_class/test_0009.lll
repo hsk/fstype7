@@ -1,0 +1,19 @@
+///>name class method
+/*** result
+(0,21
+10
+,)
+result ***/
+typedef ABC = class{
+	x:int
+	y:int
+	def add(a:int):int = a + this.x
+	def getX():int = this.x
+}
+def main() {
+	var a = new ABC
+	a.x = 10
+	
+	print_i(a.add(11))
+	print_i(a.getX())
+}

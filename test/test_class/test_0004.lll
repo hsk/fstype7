@@ -1,7 +1,6 @@
 ///>name classのポインタ演算
 /*** result
-(0,12
-,)
+(2002)
 result ***/
 def main(){
 	var a:class{

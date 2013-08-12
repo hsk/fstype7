@@ -126,8 +126,9 @@ type T =
     (** class型 *)
     | TCls of (string * T) list
     (** delegate 型 *)
-    //| TDel of T * T * T list
-
+    | TDlg of T * T * T list
+    | TThis
+    
 (**
  * 抽象構文木
  *)
@@ -168,8 +169,6 @@ type E =
     | EPtr of P * T * E
     (** 構造体のフィールド参照 *)
     | EField of P * T * T * E * string
-    (** アロー演算子 *)
-    | EArrow of P * T * T * E * string
     (** 型定義 *)
     | ETypeDef of P * T * string
     (** コメント *)
@@ -210,6 +209,8 @@ type E =
     | EImport of P * string
     (** null *)
     | ENull of P
+    (** method *)
+    | EMethod of P * T * string * (string * T) list * E
 
 (**
  * 二項演算子の構築用
@@ -401,7 +402,7 @@ type T with
                 match (List.tryFind (fun (t1,r) -> t=t1) structs) with
                 | None ->
                     structs <- a :: structs
-                    List.iter (fun (id,t) -> add(t , RL(t, GenId.genid(".class")))) ls
+                    List.iter (fun (id,t) -> add(t , RL(t, GenId.genid(".classA")))) ls
                 | _ -> ()
             | (TDef(id) as t,_) -> add((t, RL(T.find(id), GenId.genid(".struct"))))
             | _ -> ()
@@ -413,6 +414,13 @@ type T with
         with
         | e ->
             globalmap |> List.find (fun(id2, t) -> id = id2) |> fun (a,b) -> b
+    member this.findDefName =
+        let self = this.stripType(P0,[])
+        try
+            let f (id, t:T) = self = (t.stripType(P0,[]))
+            globalmap |> List.find f |> fun (a,b) -> a
+        with
+        | e -> raise(Exception(sprintf "%s name is not found %A %A" this.p this (List.rev globalmap)))
         
     (**
      * ソースコード上の表現で型を文字列化します
@@ -447,8 +455,41 @@ type T with
         | TDef(id: String)-> id
         | TFun(t, prms)->
             "(" + System.String.Join(", ", List.map (fun (t:T) -> t.ttos) prms) + ")->" + t.ttos
+        | TDlg(t, ct, prms)->
+            "(" + System.String.Join(", ", List.map (fun (t:T) -> t.ttos) (prms)) + ")->" + t.ttos
         | _-> raise (TypeError(3501, P0, "error type " + this.tName))
-
+(*
+    member this.Equals(o:T):bool = 
+        match (this,o) with
+        (** 符号付き整数型 *)
+        | (Ti(n),Ti(n2)) -> (n = n2)
+        (** 符号無し整数型 *)
+        | (Tu(n),Tu(n)) -> (n = n2)
+        (** 単精度浮動小数点数 *)
+        | Tf, Tf -> true
+        (** 倍精度浮動小数点数 *)
+        | Td, Td -> true
+        (** 型未定義 *)
+        | Tn, Tn -> true
+        (** void型 *)
+        | Tv, Tv -> true
+        (** リターン値型 *)
+        | Tr(t), Tr(t2) -> t = t2
+        (** ポインタ型 *)
+        | Tp(t), Tp(t2) -> t = t2
+        (** 配列型 *)
+        | TArr(t,n),TArr(t2,n2) -> t=t2 && n = n2
+        (** 構造体型 *)
+        | TStr(ls), TStr(ls2) -> ls = ls2
+        (** 型定義 *)
+        | TDef(s),t
+        (** 関数型 *)
+        | TFun of T * T list
+        (** class型 *)
+        | TCls of (string * T) list
+        (** delegate 型 *)
+        | TDlg of T * T * T list
+        | TThis*)
     (**
      * 1文字表現で型を文字列化します
      *)
@@ -471,6 +512,7 @@ type T with
         | TStr _ -> "p"
         | TCls _ -> "p"
         | TFun _ -> "p"
+        | TDlg _ -> "p"
         | Tp _ -> "a"
         | Tr _ -> "a"
         | Tn -> raise(TypeError(3504, P0, sprintf "Tn is not support type"))
@@ -498,7 +540,10 @@ type T with
     (**
      * 型をLLVM用に出力
      *)
-    member this.p:string =
+    member this.p:string = this.pp("")                
+
+    
+    member this.pp(id:string) =
         match this with
         | Tn -> "i8"
         | Ti(i) -> sprintf "i%d" i
@@ -507,8 +552,11 @@ type T with
         | Td -> "double"
         | Tv -> "void"
         | TFun(t1, ls) ->
-            let f (a:T):string = a.p
+            let f (a:T):string = a.pp(id)
             t1.p + "(" + System.String.Join(", ", List.map f ls) + ")*"
+        | TDlg(t1, ct, ls) ->
+            let f (a:T):string = a.pp(id)
+            t1.pp(id) + "(" + System.String.Join(", ", List.map f (ls)) + ")*"
         | TArr(t, size) -> sprintf "[%d x %s]" size (t.p)
         | Tr(t) -> t.p
         | Tp(t) -> t.p + "*"
@@ -527,10 +575,11 @@ type T with
             | None ->
                 let id = GenId.genid(".class")
                 structs <- (this , RL(this, id)) :: structs
-                List.iter (fun (id,t:T) -> t.p |> ignore) ls
+                List.iter (fun (id,t:T) -> t.pp(id) |> ignore) ls
             | _ -> ()
             let r = T.structsfind(this)
             r.p
+        | TThis -> id
     (**
      * 配列はポインタに変換して型を文字列として出力します。
      *)
@@ -572,11 +621,11 @@ type E with
         | ERef(p,t,_) -> t
         | EPtr(p,t,_) -> t
         | EField(p,t,_,_,_) -> t
-        | EArrow(p,t,_,_,_) -> t
         | ETypeDef(p,t,_) -> Tv
         | ENop(p,t,_) -> t
         | ECall(p,t,_,_) -> t
         | EFun(p,t,_,_,_) -> t
+        | EMethod(p,t,_,_,_) -> t
         | EIf(p,t,_,_,_) -> t
         | EWhile(p,t,_,_) -> t
         | EDo(p,t,_,_) -> t
@@ -594,6 +643,10 @@ type E with
         | EImport(p,_) -> Tv
         | ENull(p) -> Tv
         
+    member this.pt =
+        match this with
+        | EField(p,t,pt,_,_) -> pt
+        | _ -> raise (TypeError(3500, P0, "error type"))
     member this.setT(t:T):E =
         match this with
         | EVar(p,_,a,b) -> EVar(p,t,a,b)
@@ -614,11 +667,11 @@ type E with
         | ERef(p,_,a) -> ERef(p,t,a)
         | EPtr(p,_,a) -> EPtr(p,t,a)
         | EField(p,_,a,b,c) -> EField(p,t,a,b,c)
-        | EArrow(p,_,a,b,c) -> EArrow(p,t,a,b,c)
         | ETypeDef(p,_,a) -> ETypeDef(p,t,a)
         | ENop(p,_,a) -> ENop(p,t,a)
         | ECall(p,_,a,b) -> ECall(p,t,a,b)
         | EFun(p,_,a,b,c) -> EFun(p,t,a,b,c)
+        | EMethod(p,_,a,b,c) -> EMethod(p,t,a,b,c)
         | EIf(p,_,a,b,c) -> EIf(p,t,a,b,c)
         | EWhile(p,_,a,b) -> EWhile(p,t,a,b)
         | EDo(p,_,a,b) -> EDo(p,t,a,b)

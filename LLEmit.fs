@@ -30,8 +30,8 @@ let p(id: R, out: string):unit =
 let mutable completeds:string list = []
 
 let comment(out:string) :unit =
-    Asm.p("; " + (Regex("\\n").Replace(out,"\n; ")))
-
+    Asm.p__("; " + (Regex("\\n").Replace(out,"\n        ; ")))
+    
 (**
  * LL出力
  * 
@@ -112,7 +112,7 @@ let rec output(l: LL):unit =
         p(r, "load " + s.t.p + " " + s.p)
 
     | LLStore(s: R, r: R) ->
-        Asm.p("store " + s.t.p + " " + s.p + ", " + r.t.p + " " + r.p)
+        Asm.p__("store " + s.t.p + " " + s.p + ", " + r.t.p + " " + r.p)
 
     | LLAlloca(r: R) ->
         comment(r.ToString())
@@ -239,7 +239,7 @@ let apply(file: string, ls: LL list):unit =
         let ts = System.String.Join(", ", List.map (function | (_, t1:T) -> t1.p) ls)
         Asm.p(r1.p + " = type { " + ts + " }")
     | (TCls(ls:(string * T) list), r1:R) ->
-        let ts = System.String.Join(", ", List.map (function | (_, t1:T) -> t1.p) ls)
+        let ts = System.String.Join(", ", List.map (function | (_, t1:T) -> t1.pp(r1.p+"*")) ls)
         Asm.p(r1.p + " = type { " + ts + " }")
     | _ -> ()
     ) T.structs

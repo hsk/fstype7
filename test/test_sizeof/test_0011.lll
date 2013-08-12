@@ -3,4 +3,7 @@
 (0,4
 ,)
 result ***/
-def main(){{typedef A = int  print_l(sizeof(A))}}
+def main() {
+	typedef A = int
+	print_l(sizeof(A))
+}

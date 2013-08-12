@@ -84,12 +84,24 @@ let unifyBinT(f: E, a: E, b: E): E =
         raise(TypeError(3003, a.pos, sprintf "kore 3 %A" b.pos))// p(f, f.copy(t1, setT(a, t1), b))
     | (t1, Tn) ->
         raise(TypeError(3004, a.pos, sprintf "kore 4 %A" b.pos))// p(f, f.copy(t1, a, setT(b, t1)))
-    | (t1, t2) -> raise(TypeError(3005, a.pos, sprintf "type error %A %A" b.pos a ))
+    | (t1, t2) -> raise(TypeError(3005, a.pos, sprintf "type error %A %A %A %A" b.pos a t1 t2))
 
 (**
  * return type of function
  *)
 let mutable funType: T = Tn
+
+let typingTypeDef(id:string, t:T):T =
+    match t with
+    | TCls(ls) ->
+        let rec memcnv ls rls =
+            match ls with
+            | [] -> rls
+            | (a,TDlg(t1,_,dls))::ls -> memcnv ls ((a,TDlg(t1,Tp(TDef(id)),Tp(TDef(id))::dls))::rls)
+            | (a,t)::ls -> memcnv ls ((a,t)::rls)
+        TCls(memcnv ls [])
+    | t -> t
+
 
 (**
  * ローカル変数の型付け
@@ -150,7 +162,7 @@ let rec typingLocal(pt: T, e: E): E =
                 | ELd (p,_,a) -> ELd(p,t,a)
                 | _ ->
                     let c2 = typingLocal(pt, c)
-                    if (t <> c2.t) then raise(TypeError(3013,e.pos, "type match error"))
+                    if (t <> c2.t) then raise(TypeError(3013,e.pos, (sprintf "type match error %A and %A" t c2.t)))
                     else c2
             
             Env.addTypeDef(a, t)
@@ -161,11 +173,17 @@ let rec typingLocal(pt: T, e: E): E =
     | EFun(p, t, id, p1, b) ->
         // 関数内関数はエラー
         raise (TypeError(3006, e.pos, "inner function is not supported"))
+    | EMethod(p, t, id, p1, b) ->
+        // 関数内methodはエラー
+        raise (TypeError(3006, e.pos, "inner method is not supported"))
     | ETypeDef(p, t, id) -> // ローカル環境に型を保存する。
         if (Env.contains(id)) then
             raise(TypeError(3007, e.pos, id + " is already defined"))
-        Env.addTypeDef(id, t)
-        e
+        let t2 = typingTypeDef(id, t)
+        //raise(Exception(sprintf "etypedef %A %A" e t2))
+        //printfn "addTypeDef id=%s t= %A t2=%A" id t t2         
+        Env.addTypeDef(id, t2)
+        ETypeDef(p, t2, id)
     // var a:t = f
     | EVar(p, t, a, c) -> typingLocalVar(p,t,a,c, EVar)
     | EVal (p, t, a, c) ->
@@ -323,6 +341,7 @@ let rec typingLocal(pt: T, e: E): E =
     | EField(p, t: T, t1, a: E, id: string) ->
         let a2 = typingLocal(t1, a)
         let rec f(t: T): T = 
+            //printfn "f t = %A envmap %A" t envmap
             match t with
             | TDef(id) -> f(Env.find(id))
             | TStr(m) ->
@@ -331,6 +350,7 @@ let rec typingLocal(pt: T, e: E): E =
                     raise( TypeError(3019, e.pos, "has not have " + a2.t.ttos + " " + id))
                 | Some(s,t) -> t 
             | TCls(m) ->
+                //printfn "a=%A a2=%A m=%A" a a2 m
                 match List.tryFind (fun (s,_) -> s = id) m with
                 | None ->
                     raise( TypeError(3042, e.pos, "has not have " + a2.t.ttos + " " + id))
@@ -338,28 +358,6 @@ let rec typingLocal(pt: T, e: E): E =
             | Tp(t1) -> f(t1)
             | _ -> raise( TypeError(3020,p,"error"))
         EField(p, f(a2.t), a2.t, a2, id)
-
-    | EArrow(p, t1: T, tt: T, a: E, id: string) ->
-        let a2 = typingLocal(Tn, a)
-        // 親元の型を調べる
-        match a2.t.stripType(p, []) with
-        // 構造体のポインタのとき
-        | Tp(t) ->
-            // 矢印演算子
-            let rec findStruct(t: T, a2: E): E = 
-                match t with
-                | TStr(m) ->
-                    match List.tryFind (fun (s,_) -> s = id) m with
-                    | Some(s,t1) -> EArrow(p, t1, t, a2, id)
-                    | None ->
-                        match List.tryFind (fun (s,_) -> s = "classInfo") m with
-                        | None ->
-                            raise(TypeError(3021,p,"not found structure member " + id + " in " + t.ttos))
-                        | Some(s,Tp(TStr(_) as t1)) -> findStruct(t1, EArrow(p, a2.t, t, a2, "classInfo"))
-                        | Some(_) -> raise(TypeError(3022,p,"error"))
-                | _ -> raise(TypeError(3023,p,"error"))
-            findStruct(t, a2)
-        | _ -> raise(TypeError(3024,p,"error"))
     | ECall(pos, t: T, a1: E, ls: E list) ->
         let a2 = typingLocal(Tn, a1)
         let rec checkTypes(n: int, as1: T list, ps: E list, rs: E list): E list =
@@ -381,13 +379,31 @@ let rec typingLocal(pt: T, e: E): E =
                 checkTypes(n + 1, as1, ps, p2 :: rs)
             | _ ->
                 raise(TypeError(3027, a1.pos, n.ToString() + "th parameter undefined function " + a1.ToString() + " a2.t=" + a2.t.ttos))
-        let (t2, prms) =
+        (* koko de nantoka suru. *)
+        let (ft, t2, prms) =
             match a2.t with
-            | TFun(t2, prms) -> (t2, prms)
-            | Tp(TFun(t2, prms)) -> (t2, prms)
+            | TFun(t2, prms) as ft -> (ft,t2, prms)
+            | Tp(TFun(t2, prms) as ft) -> (ft,t2, prms)
+            | TDlg(t2, ct, prms) as ft-> (ft,t2, prms)
+            | Tp(TDlg(t2, ct, prms) as ft) -> (ft,t2, prms)
             | _ ->
                 raise (TypeError(3028, a1.pos, "error undefined function " + a1.ToString() + " a2.t=" + a2.t.ttos))
-        ECall(pos, t2, a2, checkTypes(1, prms, ls, []) |> List.rev)
+        match ft with
+        | TFun _ ->
+            ECall(pos, t2, a2, checkTypes(1, prms, ls, []) |> List.rev)
+        | TDlg _ ->
+            let a3 = typingLocal(Tn, a2)
+            let (a4,ls2) =
+                match a3 with
+                | EField(p,TDlg(t1,_,ls1),t2, e, m) ->
+                    (EField(p,TDlg(t1,t2,ls1),t2,e,m), e::ls)
+                | _ -> raise(Exception(sprintf "%A" a3))//(a3,ls)
+            
+            
+            //raise (Exception(sprintf "%A %A" prms ls2))
+            let e2 = ECall(pos, t2, a4, checkTypes(1, prms, ls2, []) |> List.rev)
+
+            e2
     (*
     | e@ECall(t: T, a: E, ls: E list) ->
         let a2 = f(Tn, a)
@@ -466,6 +482,8 @@ let typingGlobal(e: E): E =
                     raise (TypeError(3037, e.pos, "error function " + id +
                                     " type error type=" + t.ttos + " return type " + b2.t.ttos + " " + b2.ToString()))
         EFun(p, t, id, p1, b2)
+    | EMethod(p, t, id, p1, b) ->
+            raise (TypeError(3006, e.pos, "cannot use global method"))
     // TODO: 関数の型が未定義なら、コピーすると型推論出来るので推論できるけど、定義がないので困るので推論しない。
     | EVar(p, t: T, id: string, ENull(_)) -> // ローカル環境に型を保存する
         if Env.contains(id) then
@@ -485,7 +503,8 @@ let typingGlobal(e: E): E =
         GlobalEnv.addVal(b1)
         e1
     | EImport _ -> e
-    | ETypeDef _ -> e
+    | ETypeDef(p,t,id) -> ETypeDef(p, typingTypeDef(id, t), id)
+    
     | ENop _ -> e
     | e -> raise (TypeError(3039,e.pos,"error " + e.ToString())) // スルー
 
@@ -504,8 +523,10 @@ let rec checkGlobalType(e: Prog):unit =
         | EFun(p, t, n, prm, b) ->
             GlobalEnv.add(n, TFun(t, List.map (fun (id, t) -> t ) prm))
         // 型の宣言を環境に保存
-        | ETypeDef(p, t, id) -> GlobalEnv.addTypeDef(id, t)
-        // 型の指定のないグローバル変数は式の型を変数の型にして環境に保存
+        
+        | ETypeDef(p, t, id) ->
+            GlobalEnv.addTypeDef(id, typingTypeDef(id, t))
+       // 型の指定のないグローバル変数は式の型を変数の型にして環境に保存
         | EVar(p, Tn, a, c) ->
             let c2 = typingLocal(Tn, c)
             GlobalEnv.add(a, c2.t)
@@ -524,7 +545,6 @@ let rec checkGlobalType(e: Prog):unit =
         // 何かの残骸は読み捨て
         | ENop _ -> ()
         | EImport(p, id) -> importFile(id + ".lll")
-
         | e ->
             raise(TypeError(3040, e.pos, sprintf "syntax error found unexpected expression in global scope %A" e))
     match e with

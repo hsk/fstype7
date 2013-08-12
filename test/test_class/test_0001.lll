@@ -1,9 +1,8 @@
 ///>name class
 /*** result
-(0,3
-33
-,)
+(2002)
 result ***/
+
 
 def main() {
 

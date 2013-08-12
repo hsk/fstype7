@@ -56,6 +56,7 @@ let test file =
             let st = Compact.Parser.parse(src)
             let ast = Transduce.apply(st)
             let ast1 = Alpha.apply(ast)
+            printfn "ast1 = %A" ast1
             let ast2 = Typing.apply(ast1)
             printfn "ast2 = %A" ast2
             let codes = KNormal.apply(ast2)
@@ -80,6 +81,11 @@ let test file =
                 raise(Exception(sprintf "error test %s %s\nexpected = %s but result = %s" file name expected result)    )
         with
             | AST.TypeError(no,p,m) as e ->
+                printfn "%d %s '%s'" p.no m expected
+                if expected = "(null)" then ()
+                else if expected = "("+no.ToString()+")" then ()
+                else raise e
+            | Compact.SyntaxError(no,p,m) as e ->
                 printfn "%d %s '%s'" p.no m expected
                 if expected = "(null)" then ()
                 else if expected = "("+no.ToString()+")" then ()

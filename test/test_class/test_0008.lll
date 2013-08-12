@@ -1,0 +1,14 @@
+///>name class method
+/*** result
+(0,2
+,)
+result ***/
+typedef ABC = class{
+	x:int
+	y:int
+	def add(a:int):int = a + 1
+}
+def main() {
+	var a = new ABC
+	print_i(a.add(1))
+}

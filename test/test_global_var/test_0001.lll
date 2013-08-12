@@ -16,5 +16,5 @@ def main() {
 var game:Game
 
 def Game_new(game:*Game) {
-	game->score = 110
+	game.score = 110
 }
