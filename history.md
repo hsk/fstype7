@@ -1,5 +1,34 @@
 # history
 
+# 2013/08/13
+
+## エラー出力の改善
+
+●サンプルゲームの修正
+
+エラー箇所の表示がEOFと出る事が多かったので原因を調べて修正した。
+全エラーのテストは出来ていないので、テストを増やした。
+
+● static メソッドを導入する
+
+	typedef A = class {
+		static hoge(a:int):int = a + 1
+	}
+	
+
+## コンストラクタの追加
+
+	typedef A = class {
+		def this(x:int) {
+			this.x = 10
+		}
+		x:int
+	}
+	
+	new A(cast(int)10)
+
+ということが出来るようになった。
+
 # 2013/08/12
 
 

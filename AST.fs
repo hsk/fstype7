@@ -162,7 +162,7 @@ type E =
     (** 配列割り当て *)
     | ENewArray of P * T * E
     (** ヒープから割り当て *)
-    | ENew of P * T
+    | ENew of P * T * E list
     (** GC付きの変数の割り当て *)
     | EGCNew of P * T
     (** ポインタ値取得 *)
@@ -615,7 +615,7 @@ type E with
         | ENot(p,t,_) -> p
         | EAssign(p,t,_,_) -> p
         | ENewArray(p,t,_) -> p
-        | ENew(p,t) -> p
+        | ENew(p,t,_) -> p
         | EGCNew(p,t) -> p
         | ERef(p,t,_) -> p
         | EPtr(p,t,_) -> p
@@ -656,7 +656,7 @@ type E with
         | ENot(p,t,_) -> t
         | EAssign(p,t,_,_) -> t
         | ENewArray(p,t,_) -> t
-        | ENew(p,t) -> t
+        | ENew(p,t, _) -> t
         | EGCNew(p,t) -> t
         | ERef(p,t,_) -> t
         | EPtr(p,t,_) -> t
@@ -702,7 +702,7 @@ type E with
         | ENot(p,_,a) -> ENot(p,t,a)
         | EAssign(p,_,a,b) -> EAssign(p,t,a,b)
         | ENewArray(p,_,a) -> ENewArray(p,t,a)
-        | ENew(p,_) -> ENew(p,t) 
+        | ENew(p,_,l) -> ENew(p,t,l) 
         | EGCNew(p,_) -> EGCNew(p,t)
         | ERef(p,_,a) -> ERef(p,t,a)
         | EPtr(p,_,a) -> EPtr(p,t,a)

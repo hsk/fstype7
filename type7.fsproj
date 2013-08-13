@@ -869,6 +869,9 @@
     <None Include="test\test_error\test_0001.lll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Include="test\test_class\test_0010.lll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Content Include="test\test_chars\test_0001.lll">

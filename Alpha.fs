@@ -130,7 +130,9 @@ let rec f(e: E, env: Map<string, string>): E * Map<string, string> =
             let (a1,env1) = f(a,env)
             (ENeg(p,t,a1), env)
         
-        | ENew(p,_) -> (e, env)
+        | ENew(p,t,a) ->
+            let (a1,env1) = l(a,env)
+            (ENew(p,t,a1), env)
         | ENewArray(p,t, a) ->
             let (a1,env1) = f(a,env)
             (ENewArray(p,t,a1), env)

@@ -44,3 +44,9 @@ def glutEnterGameMode ():void
 def glutLeaveGameMode ():void
 def glLightfv (light:int, pname:int, params:Ptr[float]):void
 def glMaterialfv(a:int,b:int,c:Array[float,4]):void
+
+def glOrtho(
+	left:double, right:double,
+	bottom:double, top:double,
+	near:double, far:double
+):void

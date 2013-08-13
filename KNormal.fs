@@ -279,7 +279,7 @@ let rec transLocal(e: E): R =
             add(LLGoto(l2, retLabel))
         l1
 
-    | ENew(p, Tp(t)) ->
+    | ENew(p, Tp(t), l1) ->
         let (r, r2) = (genRL(Tp(Ti(8))), genRL(Tp(t)))
         add(LLCall(r, RG(Tp(Ti(8)), "malloc"), [RN(Ti(64), Env.size(p, t).ToString())]))
         add(LLCast(r2, r))
@@ -287,6 +287,7 @@ let rec transLocal(e: E): R =
         add(LLNop(sprintf "t=%A" (t.stripType(P0, []))))
         match t.stripType(P0, []) with
         | TCls(ls) as tc -> // class
+            let haveConstructor: bool ref = ref false
             //add(LLNop(sprintf "ls=%A" ls))
             let f (no:int)(id:string, td:T) :int =
                 //add(LLNop(sprintf "td=%A" td))
@@ -295,12 +296,22 @@ let rec transLocal(e: E): R =
                     //add(LLNop(sprintf "--------"))
                     transAStore(td, r2, RN(Ti(32), no.ToString()), RG(td, tc.findDefName+"_"+id)) |> ignore
                     //add(LLNop(sprintf "--------"))
+                    if(id="this")then
+                        haveConstructor := true
+                    
                     no + 1
                 | _ -> no + 1
             List.fold f 0 ls |> ignore
-        | _ -> ()
-        
-        r2
+            if !haveConstructor then
+                let l2 = List.map transLocal l1
+                let l3 = RG(TFun(Tv,Tp(t)::(l2 |> List.map (fun (a:R)->a.t))), t.findDefName+"_this")
+                let r = genRL(Tv)
+                //raise (Exception(sprintf "%A " (LLCall(r, l3, r2::l2))))
+                add(LLCall(r, l3, r2::l2))
+                r2
+            else
+                r2
+        | _ -> r2
 
     | EGCNew(p, Tp(t)) ->
         let (r, r2) = (genRL(Tp(Ti(8))), genRL(Tp(t)))

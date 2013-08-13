@@ -192,6 +192,7 @@ let test_main(args: string []):int =
         // Test.test("test/test_global_var/test_0004.lll")
         //        Test.test("test/test_byte/test_0006.lll")
         //Test.test("sample/hello.lll")
+        Test.test("test/test_class/test_0010.lll")
         Test.tests()
         bench "end"
         0
@@ -302,10 +303,18 @@ let main2 (args:string []):int =
 
 [<EntryPoint>]
 let main(args:string []):int =
-    //Test.test("test/test_error/test_0001.lll")
-    //test_main args
-    // main1 args
-    main2 args
-    //main2 ("sample/opengl.lll sample/program.lll -run -framework OpenGL -framework glut".Split(' '))
-    //main2 ("sample/opengl.lll sample/shoot.lll -run -framework OpenGL -framework glut".Split(' '))
-    //0
+    try
+        Test.test("test/test_class/test_0010.lll")
+        //test_main args
+        // main1 args
+        main2 args
+        //main2 ("sample/opengl.lll sample/program.lll -run -framework OpenGL -framework glut".Split(' '))
+        //main2 ("sample/opengl.lll sample/shoot.lll -run -framework OpenGL -framework glut".Split(' '))
+        //0
+        0
+    with
+    | e ->
+        printfn "%A" e
+        1
+    
+    

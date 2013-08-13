@@ -1,0 +1,33 @@
+///>name class constructor
+/*** result
+(0,21
+10
+20
+10
+,)
+result ***/
+typedef ABC = class{
+	def this(x:int,y:int) {
+		this.x = x
+		this.y = y
+	}
+	x:int
+	y:int
+	def add(a:int):int = a + this.x
+	def getX():int = this.x
+}
+
+typedef B = class{
+	def this() {
+		this.x = 10
+	}
+	x:int
+}
+def main() {
+	var a = new ABC(cast(int)10,cast(int)20)
+	print_i(a.add(11))
+	print_i(a.getX())
+	print_i(a.y)
+	var b = new B()
+	print_i(b.x)
+}

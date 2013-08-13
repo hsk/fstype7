@@ -288,7 +288,9 @@ let rec typingLocal(pt: T, e: E): E =
         let a2 = typingLocal(Ti(64), a)
         ESizeOf(p, Ti(64), a2.t, ENull(a2.pos))
     | ENewArray(p, t: T, a: E) -> ENewArray(p, t, typingLocal(Ti(64), a))
-    | ENew(p, t: T) -> e
+    | ENew(p, t: T, a:E list) ->
+        let a2 = List.map (fun a -> typingLocal(Tn, a)) a
+        ENew(p, t, a2)
     | EGCNew(p, t: T) -> e
     | ERef(p, t: T, a: E) ->
         let a2 = typingLocal(Tn, a)
@@ -382,7 +384,6 @@ let rec typingLocal(pt: T, e: E): E =
                 checkTypes(n + 1, as1, ps, p2 :: rs)
             | _ ->
                 raise(TypeError(3027, a1.pos, n.ToString() + "th parameter undefined function " + a1.ToString() + " a2.t=" + a2.t.ttos))
-        (* koko de nantoka suru. *)
         let (ft, t2, prms) =
             match a2.t with
             | TFun(t2, prms) as ft -> (ft,t2, prms)

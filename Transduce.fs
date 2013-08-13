@@ -113,6 +113,15 @@ and members(id:string, st: Token, m: (string * T) list): (string * T) list =
     | Pre(Id(_, "def"), Bin(Msg(Id(_, name), Id(_, "("), r, Id(_, ")")), Id(_, ":"), typ)) ->
         let t1 = TDlg(t(typ), TThis, List.map (fun (id, t) -> t) (fprms r))
         (name, t1) :: m
+    | Pre(Id(_, "static") as d1,
+          Msg(Msg(Id(idp, name), (Id(_, "(") as d2), r, (Id(_, ")") as d3)), (Id(_, "{") as d4), e, (Id(_, "}") as d5))) ->
+        
+        globals <- f(
+            Pre(Id(d1.pos, "def"), Msg(Msg(Id(idp, id+"_"+name), d2, r, d3), d4, e, d5))
+        )::globals
+        let t1 = TFun(Tv, List.map (fun (id, t) -> t) (fprms r))
+        (name, t1) :: m
+
     | o -> raise(SyntaxError(2003, o.pos, "error syntax error " + o.first.ToString() + " " + o.ToString()))
 
 (**
@@ -170,7 +179,8 @@ and f(o: Token): E =
     | Id(_, "return") -> ERet(o.p, Tn, ENop(o.p, Tv, "void"))
     | Pre(Id(_, "return"), Id(_, ";")) -> ERet(o.p, Tv, ENop(o.p, Tv, "void"))
     | Pre(Id(_, "return"), a) -> ERet(o.p, Tn, f(a))
-    | Pre(Id(_, "new"), a) -> ENew(o.p, Tp(t(a)))
+    | Pre(Id(_, "new"), Msg(a, Id(_,"("), b, Id(_, ")"))) -> ENew(o.p, Tp(t(a)), prms(b))
+    | Pre(Id(_, "new"), a) -> ENew(o.p, Tp(t(a)), [ENull(o.p)])
     | Pre(Id(_, "gcnew"), a) -> EGCNew(o.p, Tp(t(a)))
     | St(Id(_, "cast"), Id(_, "("), t1, Id(_, ")"), a) -> ECast(o.p, t(t1), f(a))
     | Bin(a, Id(_, "+"), b) -> bin("add", a, b)
@@ -196,21 +206,23 @@ and f(o: Token): E =
     | Bin(a, Id(_, "!="), b) -> bin("ne", a, b)
     | Bin(a, (Id(_, "+=") as o), b) -> f(Bin(a, Id(o.pos, "="), Bin(a, Id(o.pos, "+"), b)))
     | Bin(a, (Id(_, "-=") as o), b) -> f(Bin(a, Id(o.pos, "="), Bin(a, Id(o.pos, "-"), b)))
+    | Bin(a, (Id(_, "*=") as o), b) -> f(Bin(a, Id(o.pos, "="), Bin(a, Id(o.pos, "*"), b)))
+    | Bin(a, (Id(_, "/=") as o), b) -> f(Bin(a, Id(o.pos, "="), Bin(a, Id(o.pos, "/"), b)))
     | Pst(a, (Id(_, "++") as o)) -> f(Bin(a, Id(o.pos, "="), Bin(a, Id(o.pos, "+"), Lng(o.pos, 1L))))
     | Pst(a, (Id(_, "--") as o)) -> f(Bin(a, Id(o.pos, "="), Bin(a, Id(o.pos, "-"), Lng(o.pos, 1L))))
     | Pst(a, Id(_, ";")) -> f(a)
     | Pre(Id(_, "var"), Bin(Id(_, a), Id(_, ":"), b)) -> EVar(o.p, t(b), a, ENull(o.p))
     | Pre(Id(_, "typedef"), Bin(Id(_, a), Id(_, "="), b)) -> ETypeDef(o.p, tc(a, b), a)
+    | Pre(Id(_, "type"), Bin(Id(_, a), Id(_, "="), b)) -> ETypeDef(o.p, tc(a, b), a)
     | Id(_, "void") -> ENop(o.p, Tv, "void")
     | Id(_, "break") -> EBreak(o.p, Tn)
     | Id(_, "continue") -> EContinue(o.p, Tn)
-    | Id(_, a) -> printfn "%A" o ; EId(o.p, Tn, a)
+    | Id(_, a) -> EId(o.p, Tn, a)
     | Msg(a, Id(_, "("), b, Id(_, ")")) ->
         let o = f(a)
         ECall(o.pos, Tn, o, prms(b))
     | Bin(a, Id(_, "."), Id(_, b)) ->
         let o = f(a)
-        printfn "o=%A %A" o o.pos
         EField(o.pos, Tn, Tn, o, b)
     | St(Id(_, "if"), Id(_, "("), a, Id(_, ")"), Bin(b, Id(_, "else"), c)) ->
         EIf(o.p, Tn, f(a), f(b), f(c))
@@ -239,6 +251,7 @@ and f(o: Token): E =
     | Pre(Id(_, "case"), Bin(a, Id(_, ":"), b)) -> ECase(o.p, Tn, f(a), f(b))
     | Prn(Id(_, "case"), Id(_, "_"), Id(_, ":")) -> ECase(o.p, Tn, ENull(o.p), ENop(o.p, Tv, ""))
     | Prn(Id(_, "case"), a, Id(_, ":")) -> ECase(o.p, Tn, f(a), ENop(a.p, Tv, ""))
+    | Bin(a,b,c) -> raise(SyntaxError(2005, o.first.pos, "unknown binary operator " + b.ToString()))
     | o -> raise(SyntaxError(2005, o.first.pos, "error syntax error " + o.first.ToString() + " " + o.ToString()))
 
 (**
@@ -318,9 +331,15 @@ and switches(e: Token): (E * E) list =
  * 関数パラメータ等の変換
  *)
 and prms(st: Token): E list =
+
+    let f2 a ls =
+        let a2 = f(a)
+        match a2 with
+        | ENop _ -> ls
+        | _ -> a2::ls
     match st with
-    | Bin(a, Id(_, ","), b) -> f(a) :: prms(b)
-    | a -> [f(a)]
+    | Bin(a, Id(_, ","), b) -> f2 a (prms(b))
+    | a -> f2 a []
 
 let apply(st: Token): Prog =
     globals <- []

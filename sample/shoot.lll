@@ -1,7 +1,12 @@
 import sample.math
 import sample.opengl
 
-typedef bool = int
+def exit(a:int):void
+
+
+val PI = 3.141592
+
+type bool = int
 
 val false:int = 0
 val true:int = 1
@@ -34,8 +39,6 @@ val GL_POSITION:int = 0x1203
 val GL_DIFFUSE:int = 0x1201
 val GL_FRONT_AND_BACK:int = 0x0408
 
-def exit(a:int):void
-
 val fullscreen:int = 0
 
 var gameover:Ptr[GameOver]
@@ -56,8 +59,8 @@ var key:Ptr[Key]
 
 def main(argc:int, argv:Ptr[Ptr[char]]) {
 
-	key = newKey()
-	ship = newShip(0.0, 0.0)
+	key = new Key()
+	ship = new Ship(50.0, 0.0)
 	ship.init()
 	
 	gameover = new GameOver
@@ -68,19 +71,19 @@ def main(argc:int, argv:Ptr[Ptr[char]]) {
 
 	var i:int
 	for(i = 0; i < bulletsCnt;i++) {
-		bullets[i] = newBullet()
+		bullets[i] = new Bullet()
 	}
 
 	for(i = 0; i < particlesCnt;i++) {
-		particles[i] = newParticle()
+		particles[i] = new Particle()
 	}
 
 	for(i = 0; i < shotsCnt;i++) {
-		shots[i] = newShot()
+		shots[i] = new Shot()
 	}
 
 	for(i = 0; i < enemiesCnt;i++) {
-		enemies[i] = newEnemy()
+		enemies[i] = new Enemy()
 	}
 
   	glutInit(&argc, argv)
@@ -101,8 +104,8 @@ def main(argc:int, argv:Ptr[Ptr[char]]) {
   	glutDisplayFunc(main_display)
   	glutTimerFunc(20, main_loop, 0)
 
-  	glutSpecialFunc(downKey)
-  	glutSpecialUpFunc(upKey)
+  	glutSpecialFunc(Key_onDownKey)
+  	glutSpecialUpFunc(Key_onUpKey)
   	glutMainLoop()
 }
 
@@ -114,9 +117,9 @@ def main_loop(a:int) {
 
 def random():double = {
 	randomValue = randomValue * 143242143 + 432414321
-	var a:double = 0x7ffffffff
+	val a:double = cast(double)0x7fffffff
 	randomValue = randomValue & 0x7fffffff
-	var b:double = cast(double)randomValue
+	val b:double = cast(double)randomValue
 	(b / a)
 }
 
@@ -153,8 +156,8 @@ def onEnter() {
 		var b = bullets[i]
 		if(b.visible) {
 			b.move()
-			if(ship.exists && abs(ship.x - b.x) < 3 && abs(ship.y - b.y) < 3) {
-				addParticles(ship.x, ship.y, 100)
+			if(ship.visible && fabs(ship.x - b.x) < 6.0 && fabs(ship.y - b.y) < 6.0) {
+				addParticles(ship.x, ship.y, 100, 0.5, 0.2, 0.1, 1.0)
 				ship.exists = false
 				ship.visible = false
 				gameover.visible = true
@@ -167,10 +170,10 @@ def onEnter() {
 		if (s.visible) {
 			for (var j = 0; j < enemiesCnt; j++) {
 				var enemy = enemies[j]
-				if(enemy.visible && abs(enemy.x - s.x) < 30 && abs(enemy.y - s.y) < 30) {
+				if(enemy.visible && fabs(enemy.x - s.x) < 30.0 && fabs(enemy.y - s.y) < 30.0) {
 					score += 100
 					rank = score / 1000
-					addParticles(enemy.x, enemy.y, 30)
+					addParticles(enemy.x, enemy.y, 30, 0.1, 0.2, 0.5, 1.0)
 					enemy.visible = false
 				}
 			}
@@ -194,16 +197,27 @@ def color(r:float,g:float,b:float,a:float) {
 def main_display() {
   	var WIDTH:int = 640
   	var HEIGHT:int = 480
+  	var _farPlane = 1000.0
+  	var _nearPlane = 0.1
   
   	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-  	glViewport(0, 0, 640, 480)
+  	glViewport(0, 0, WIDTH, HEIGHT)
 
   	glMatrixMode(GL_PROJECTION)
   	glLoadIdentity()
 
+
   	// 視野角,アスペクト比(ウィンドウの幅/高さ),描画する範囲(最も近い距離,最も遠い距離)
-  	gluPerspective(90.0, cast(double)WIDTH / cast(double)HEIGHT, 1.0, 10000.0)
-	// glFrustum(-1*cast(double)WIDTH, cast(double)WIDTH * 1.0, cast(double)HEIGHT * 1.0, cast(double)HEIGHT * -0.5, cast(double)HEIGHT, 100000.0);
+  	//gluPerspective(90.0, cast(double)WIDTH / cast(double)HEIGHT, 1.0, 10000.0)
+    glFrustum(-_nearPlane,
+              _nearPlane,
+              -_nearPlane * cast(double) HEIGHT / cast(double) WIDTH,
+              _nearPlane * cast(double) HEIGHT / cast(double) WIDTH,
+              0.1, _farPlane)
+
+	
+    glOrtho(0.0, 640.0, 480.0, 0.0, -1.0, 1.0)
+  	glMatrixMode(GL_MODELVIEW)
  	// ライトの設定
  	val n:float = 10.0
  	var lightpos:Array[float,4]
@@ -212,15 +226,10 @@ def main_display() {
  	lightpos[1] = 802.0 * n
  	lightpos[2] = 505.0 * n
  	lightpos[3] = 1.0
-  	glLightfv(GL_LIGHT0, GL_POSITION, cast(Ptr[float])lightpos)
+//  	glLightfv(GL_LIGHT0, GL_POSITION, cast(Ptr[float])lightpos)
 
-  	glMatrixMode(GL_MODELVIEW)
   	glLoadIdentity()
   	glBlendFunc(GL_SRC_ALPHA, GL_ONE)
-  	gluLookAt(0.0,0.0,320.0, // カメラの座標
-		0.0,0.0,0.0, // 注視点の座標
-		0.0,1.0,0.0) // 画面の上方向を指すベクトル 
-		
  
 	for (var i = 0; i < enemiesCnt; i++) {
 		var enemy = enemies[i]
@@ -256,9 +265,9 @@ def main_display() {
   	glFlush()
 }
 
-def addParticles(x:double, y:double, n:int) {
+def addParticles(x:double, y:double, n:int, r:double,g:double,b:double,a:double) {
 	for (var i:int = 0; i < n; i++) {
-		addParticle(x, y, random() * 100)
+		addParticle(x, y, random() * 100, r, g, b, a)
 	}
 }
 
@@ -288,11 +297,11 @@ def addShot(x:double, y:double, rad:double) {
 	}
 }
 
-def addParticle(x:double, y:double, rad:double) {
+def addParticle(x:double, y:double, rad:double, r:double,g:double,b:double,a:double) {
 	for (var i:int = 0; i < particlesCnt; i++) {
-		val b = particles[i]
-		if(!b.visible) {
-		  b.init(x, y, rad)
+		val b1 = particles[i]
+		if(!b1.visible) {
+		  b1.init(x, y, rad, r, g, b, a)
 		  return
 		}
 	}
@@ -308,8 +317,6 @@ def addEnemy(x:double, y:double, rad:double) {
 	}
 }
 
-val PI = 3.141592
-
 def normalRad(v:double):double = {
 	v + 2 * PI * (
 		if (v >  PI) -1 else
@@ -317,7 +324,8 @@ def normalRad(v:double):double = {
 	)
 }
 
-typedef Key = class {
+type Key = class {
+
 	up:int
 	down:int
 	left:int
@@ -326,7 +334,7 @@ typedef Key = class {
 	shot:int
 	start:int
 
-	def init() {
+	def this() {
 		this.up =
 		this.down =
 		this.left =
@@ -356,30 +364,24 @@ typedef Key = class {
 			27? glutLeaveGameMode() exit(0) break
 		}
 	}
+	
+	static onDownKey(k:byte, x:int, y:int) {
+		key.downKey(k)
+	}
+
+	static onUpKey(k:byte, x:int, y:int) {
+		key.upKey(k)
+	}
 }
 
-def newKey():Ptr[Key] = {
-	var key = new Key
-	key.init()
-	key
-}
-
-def downKey(k:byte, x:int, y:int) {
-	key.downKey(k)
-}
-
-def upKey(k:byte, x:int, y:int) {
-	key.upKey(k)
-}
-
-typedef GameOver = class {
+type GameOver = class {
 	visible:bool
 	x:double
 	y:double
 	text:Ptr[byte]
 }
 
-typedef Ship = class {
+type Ship = class {
 
 	x:double
 	y:double
@@ -389,7 +391,7 @@ typedef Ship = class {
 	timer:int
 
 	def this(x:double, y:double) {
-		this.speed = 5.0
+		this.speed = 7.0
 		this.x = x
 		this.y = y
 	}
@@ -402,15 +404,24 @@ typedef Ship = class {
 
 	def move() {
 	  	this.timer++
-	  	var x = this.x
 	  
 		if(this.timer > 300) this.exists = true
 		
+		var x = 0.0
+		var y = 0.0
+		
 		if(key.shot) addShot(this.x, this.y, -PI / 2)
-		if(key.left) this.x -= this.speed
-		if(key.right) this.x += this.speed
-		if(key.up) this.y -= this.speed
-		if(key.down) this.y += this.speed
+		if(key.left) x -= this.speed
+		if(key.right) x += this.speed
+		if(key.up) y -= this.speed
+		if(key.down) y += this.speed
+
+		if(x != 0.0 && y != 0.0) {
+			x /= 1.4142
+			y /= 1.4142
+		}
+		this.x += x
+		this.y += y
 		
 		if(this.x < 0) this.x = 5 else if(this.x > 465) this.x = 465 - 5
 		if(this.y < 0) this.y = 5 else if(this.y > 465) this.y = 465 - 5
@@ -423,7 +434,7 @@ typedef Ship = class {
 		glTranslated(this.x, this.y, 0.0)
 
 		var x = 15.0
-		var y = 30.0
+		var y = 15.0
 		glBegin(GL_POLYGON)
 			color(1.0,0.275,0.275,1.0)
 			glNormal3d(0.0,0.0,1.0)
@@ -437,15 +448,8 @@ typedef Ship = class {
 
 }
 
-def newShip(x:double, y:double):Ptr[Ship] = {
-	var this = new Ship
-	this.speed = 5.0
-	this.x = x
-	this.y = y
-	this
-}
+type Enemy = class {
 
-typedef Enemy = class {
 	x:double
 	y:double
 	visible:bool
@@ -456,6 +460,14 @@ typedef Enemy = class {
 	nextMove:(Ptr[Enemy])=>void
 	time:int
 	r2:double
+
+	def this() {
+		this.speed = 5
+		this.rad = 0
+		this.r = 0.05
+		this.r2 = 0
+		this.visible = false
+	}
 
 	def init(x:double, y:double, rad:double) {
 		this.x = x
@@ -472,7 +484,7 @@ typedef Enemy = class {
 		var x = 15.0
 		var y = 15.0
 		glBegin(GL_POLYGON)
-			color(1.0,0.5,1.0,0.0)
+			color(0.5,1.0,0.0,1.0)
 			glNormal3d(0.0,0.0,1.0)
 			glVertex3d(-x,y,0.0)
 			glVertex3d(x,y,0.0)
@@ -493,8 +505,8 @@ typedef Enemy = class {
 		this.x += cos(this.rad) * this.speed
 		this.y += sin(this.rad) * this.speed
 		
-		if(this.x < 0) this.x = 5 else if(this.x > 465) this.x = 465 - 5
-		if(this.y < 0) this.y = 5 else if(this.y > 465) this.y = 465 - 5
+//		if(this.x < 0) this.x = 5 else if(this.x > 465) this.x = 465 - 5
+//		if(this.y < 0) this.y = 5 else if(this.y > 465) this.y = 465 - 5
 
 		rad2
 	}
@@ -505,110 +517,113 @@ typedef Enemy = class {
 		this.nextMove = next
 	}
 	
-}
-
-def newEnemy():Ptr[Enemy] = {
-	var this = new Enemy
-	this.speed = 5
-	this.rad = 0
-	this.r = 0.05
-	this.r2 = 0
-	this.visible = false
-	this
-}
-
-
-def Enemy_moveWait(this:Ptr[Enemy]) {
-	this.moveBody()
-	this.time -= 1
-	if (this.time <= 0) {
-		this.move = this.nextMove
-	}
-}
-
-def Enemy_move1(this:Ptr[Enemy]) {
-	val r:double = this.moveBody()
-	if (random() > 0.8) {
-		addBullet(this.x, this.y, this.r)
-		if (random() > 0.8) {
-			this.r2 = 0
-			this.wait(30, Enemy_move2)
+	static moveWait(this:Ptr[Enemy]) {
+		this.moveBody()
+		this.time -= 1
+		if (this.time <= 0) {
+			this.move = this.nextMove
 		}
 	}
-}
 
-def Enemy_move2(this:Ptr[Enemy]) {
-	val r:double = this.moveBody()
-	val rr:int = cast(int)(random() * 5.0 + 1.0)
-	addBulletN(this.x, this.y, r + this.r2, rr, 0.1)
-
-	this.r2 += cast(double)rr * 0.1
-
-	if (random() < 0.03) {
-		this.wait(60, Enemy_move1)
+	static move1(this:Ptr[Enemy]) {
+		val r:double = this.moveBody()
+		if (random() > 0.8) {
+			addBullet(this.x, this.y, r)
+			if (random() > 0.8) {
+				this.r2 = 0.0
+				this.wait(30, Enemy_move2)
+			}
+		}
 	}
+
+	static move2(this:Ptr[Enemy]) {
+		val r:double = this.moveBody()
+		val rr:int = cast(int)(random() * 5.0 + 1.0)
+		addBulletN(this.x, this.y, r + this.r2, rr, 0.1)
+
+		this.r2 += cast(double)rr * 0.1
+
+		if (random() < 0.03) {
+			this.wait(60, Enemy_move1)
+		}
+	}
+
 }
 
-typedef Particle = class {
+type Particle = class {
 
 	x:double
 	y:double
 	visible:bool
 	speed:double
 	rad:double
+	size:double
 
-	def init(x:double, y:double, rad:double) {
+	r:double
+	g:double
+	b:double
+	a:double
+			
+	def this() {
+		this.visible = false
+	}
+
+	def init(x:double, y:double, rad:double, r:double, g:double, b:double, a:double) {
 		this.x = x
 		this.y = y
 		this.rad = rad
 		this.visible = true
-		this.speed = random() * 50 + 10
+		this.speed = random() * 50 + 2
+		this.size = 50.0
+		this.r = r
+		this.g = g
+		this.b = b
+		this.a = a
 	}
-
-	def draw() {
-		glPushMatrix()
-		glTranslated(this.x, this.y, 0.0)
-		
-		val x = 5.0
-		val y = 5.0
-		glBegin(GL_POLYGON)
-			color(1.0,0.5,1.0,0.0)
-			glNormal3d(0.0,0.0,1.0)
-			glVertex3d(-x,y,0.0)
-			glVertex3d(x,y,0.0)
-			glVertex3d(x,-y,0.0)
-			glVertex3d(-x,-y,0.0)
-		glEnd()
-		glPopMatrix() 
-	}
-
 
 	def move():bool = {
 
 		this.x += cos(this.rad) * this.speed
 		this.y += sin(this.rad) * this.speed
 
-		if (this.x < 0 || 465 < this.x || this.y < 0 || 465 < this.y)
+		this.size -= 1.5
+		
+		if (this.size < 0 || this.x < 0 || 465 < this.x || this.y < 0 || 465 < this.y)
 			this.visible = false
 
 		this.visible
 	}
 
+	def draw() {
+		glPushMatrix()
+		glTranslated(this.x, this.y, 0.0)
+		
+		val x = this.size
+		val y = this.size
+		glBegin(GL_POLYGON)
+			color(cast(float)this.r, cast(float)this.g, cast(float)this.b, cast(float)this.a)
+			glNormal3d(0.0,0.0,1.0)
+			glVertex3d(-x,y,0.0)
+			glVertex3d(x,y,0.0)
+			glVertex3d(x,-y,0.0)
+			glVertex3d(-x,-y,0.0)
+		glEnd()
+		glPopMatrix() 
+	}
+
 }
 
-def newParticle():Ptr[Particle] = {
-	val this = new Particle
-	this.speed = 5
-	this.visible = false
-	this
-}
-
-typedef Bullet = class {
+type Bullet = class {
 	x:double
 	y:double
 	visible:bool
 	speed:double
 	rad:double
+
+	def this() {
+		this.visible = false
+		this.speed = 10
+	}
 
 	def init(x:double, y:double, rad:double) {
 		this.x = x
@@ -624,7 +639,7 @@ typedef Bullet = class {
 		val x = 5.0
 		val y = 5.0
 		glBegin(GL_POLYGON)
-			color(1.0,0.5,1.0,0.0)
+			color(0.0, 1.0,0.5,1.0)
 			glNormal3d(0.0,0.0,1.0)
 			glVertex3d(-x,y,0.0)
 			glVertex3d(x,y,0.0)
@@ -635,29 +650,25 @@ typedef Bullet = class {
 	}
 
 	def move():bool = {
-		this.x += cos(this.rad)*this.speed
-		this.y += sin(this.rad)*this.speed
+		this.x += cos(this.rad) * this.speed
+		this.y += sin(this.rad) * this.speed
 		if(this.x < 0 || 465 < this.x || this.y < 0 || 465 < this.y)
 			this.visible = false
 		this.visible
 	}
-
-
 }
 
-def newBullet():Ptr[Bullet] = {
-	val this = new Bullet
-	this.visible = false
-	this.speed = 10
-	this
-}
-
-typedef Shot = class {
+type Shot = class {
 	x:double
 	y:double
 	visible:bool
 	speed:double
 	rad:double
+
+	def this() {
+		this.speed = 25
+		this.visible = false
+	}
 
 	def init(x:double, y:double, rad:double) {
 		this.x = x
@@ -670,10 +681,10 @@ typedef Shot = class {
 		glPushMatrix() 
 		glTranslated(this.x, this.y, 0.0)
 
-		val x = 5.0
-		val y = 5.0
+		val x = 10.0
+		val y = 30.0
 		glBegin(GL_POLYGON)
-			color(1.0,0.5,1.0,0.5)
+			color(0.1,0.2,0.5,1.0)
 			glNormal3d(0.0,0.0,1.0)
 			glVertex3d(-x,y,0.0)
 			glVertex3d(x,y,0.0)
@@ -691,11 +702,4 @@ typedef Shot = class {
 		this.visible
 	}
 
-}
-
-def newShot():Ptr[Shot] = {
-	val this = new Shot
-	this.speed = 25
-	this.visible = false
-	this
 }

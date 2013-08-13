@@ -159,6 +159,7 @@ module Parser =
                             "gcnew", Opl(10);
                             "sizeof", Opl(10);
                             "typedef", Opl(4);
+                            "type", Opl(4);
                             "-", Opl(100);
                             "*", Opl(99);
                             "&", Opl(100);
@@ -166,6 +167,7 @@ module Parser =
                             "var", Opl(10);
                             "val", Opl(10);
                             "def", Opl(10);
+                            "static", Opl(10);
                             "return", Opl(10);
                             "goto", Opl(10);
                             "case", OpP(31, Id(P0,":"));
@@ -210,6 +212,8 @@ module Parser =
                             "||", OIl(4);
                             ",", OIr(1);
                             "else", OIl(3);
+                            "*=", OIr(5);
+                            "/=", OIr(5);
                             "+=", OIr(5);
                             "-=", OIr(5);
                             "=", OIr(5);

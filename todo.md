@@ -14,18 +14,6 @@
 
 ## クラス
 
-	○コンストラクタを導入する
-	
-		typedef A = class {
-			def this(a:int) = this.a = a
-		}
-
-	○ static メソッドを導入する
-
-		typedef A = class {
-			static hoge(a:int):int = a + 1
-		}
-	
 	○グローバルな値のクラスのバグを解消する
 
 ## 総称関数
