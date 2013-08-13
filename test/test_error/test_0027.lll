@@ -1,0 +1,11 @@
+///>name error 3027
+/*** result
+(3027,10)
+result ***/
+
+def a() {}
+
+def main() {
+
+	a(10)
+}

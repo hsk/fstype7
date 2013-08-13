@@ -36,9 +36,9 @@ let add(a: LL):unit =
  * @param t: T 型
  * @return String 型種別文字列
 *)
-let rec tName2(t: T): string =
+let rec tName2(p:P, t: T): string =
     match t with
-    | TDef(id) -> tName2(Env.find(id))
+    | TDef(id) -> tName2(p, Env.find(p, id))
     | TArr _ -> "p"
     | TStr _ -> "p"
     | TCls _ -> "p"
@@ -62,10 +62,10 @@ let genRL(t: T): R =
  * @param a: R レジスタ
  * @return R 返り値レジスタ
 *)
-let transLoad(a: R): R =
-    match tName2(a.t) with
+let transLoad(p:P, a: R): R =
+    match tName2(p, a.t) with
     | "a" | "p" ->
-        let t = Env.find(a.id).stripType(P0, [])
+        let t = Env.find(p, a.id).stripType(p, [])
         match t with
         | Tp _ ->
             let r = genRL(t)
@@ -106,8 +106,8 @@ let transLoad(a: R): R =
  * @param r: R フィールドを表すレジスタ
  * @return R 返り値レジスタ
  *)
-let transALoad(t: T, e1: R, r: R): R =
-    match tName2(t) with
+let transALoad(p: P, t: T, e1: R, r: R): R =
+    match tName2(p, t) with
     | "a" ->
         let (r0, r1, r2) = (genRL(Tp(t)), genRL(Tp(t)), genRL(t))
         add(LLCast(r0, e1))
@@ -139,10 +139,10 @@ let transALoad(t: T, e1: R, r: R): R =
  * @param b: R 保存元レジスタ
  * @return R 返り値レジスタ
  *)
-let transStore(a: R, b: R): R =
-    match tName2(a.t) with
+let transStore(p:P, a: R, b: R): R =
+    match tName2(p, a.t) with
     | "a" ->
-        let t = Env.find(a.id)
+        let t = Env.find(p, a.id)
         let r = genRL(t)
         add(LLCast(r, b))
         add(LLStore(r, a.setT(Tp(t))))
@@ -263,7 +263,7 @@ let rec transLocal(e: E): R =
         let ft = TFun(Tp(Ti(8)), [Ti(64)])
         let (r, r2, r3) = (genRL(Ti(64)), genRL(Tp(Ti(8))), genRL(t))
         let a2 = transLocal(a)
-        add(LLBin(r, "mul", a2, RN(Ti(64), Env.size(t).ToString())))
+        add(LLBin(r, "mul", a2, RN(Ti(64), Env.size(p, t).ToString())))
         add(LLCall(r2, RG(ft, "malloc"), [r]))
         add(LLCast(r3, r2))
         if not(GlobalEnv.contains("malloc")) then GlobalEnv.add("malloc", TFun(Tp(Ti(8)), [Ti(64)]))
@@ -281,7 +281,7 @@ let rec transLocal(e: E): R =
 
     | ENew(p, Tp(t)) ->
         let (r, r2) = (genRL(Tp(Ti(8))), genRL(Tp(t)))
-        add(LLCall(r, RG(Tp(Ti(8)), "malloc"), [RN(Ti(64), Env.size(t).ToString())]))
+        add(LLCall(r, RG(Tp(Ti(8)), "malloc"), [RN(Ti(64), Env.size(p, t).ToString())]))
         add(LLCast(r2, r))
         if not(GlobalEnv.contains("malloc")) then GlobalEnv.add("malloc", TFun(Tp(Ti(8)), [Ti(64)]))
         add(LLNop(sprintf "t=%A" (t.stripType(P0, []))))
@@ -305,17 +305,17 @@ let rec transLocal(e: E): R =
     | EGCNew(p, Tp(t)) ->
         let (r, r2) = (genRL(Tp(Ti(8))), genRL(Tp(t)))
         let ft = TFun(Tp(Ti(8)), [Ti(64)])
-        add(LLCall(r, RG(ft, "newobj"), [RN(Ti(64), Env.size(t).ToString())]))
+        add(LLCall(r, RG(ft, "newobj"), [RN(Ti(64), Env.size(p, t).ToString())]))
         add(LLCast(r2, r))
         
         GlobalEnv.add("newobj", ft)
         r2
 
-    | ERef(p, t, EId(p2, _, id)) -> Env.findR(id).setT(t)
+    | ERef(p, t, EId(p2, _, id)) -> Env.findR(p, id).setT(t)
     | EBlock(p, t, l1) -> List.fold (fun (r:R) (a:E) -> transLocal(a) ) (RN(Tv, "")) l1
     | ESizeOf(p, _, t, _) ->
         let r = genRL(Ti(64))
-        add(LLBin(r, "add", RN(Ti(64), "0"), RN(t, Env.size(t).ToString())))
+        add(LLBin(r, "add", RN(Ti(64), "0"), RN(t, Env.size(p, t).ToString())))
         r
     | ELd(p, t, i) ->
         let r = genRL(t)
@@ -509,9 +509,9 @@ let rec transLocal(e: E): R =
 *)
 and transField(e: E): R =
     match e with
-    | EId(p, t, id) -> transLoad(Env.findR(id))
-    | EArray(p, t, e, idx) -> transALoad(t, transField(e), transLocal(idx))
-    | EPtr(p, t, e) -> transALoad(t, transField(e), RN(Ti(64), "0"))
+    | EId(p, t, id) -> transLoad(p, Env.findR(p, id))
+    | EArray(p, t, e, idx) -> transALoad(p, t, transField(e), transLocal(idx))
+    | EPtr(p, t, e) -> transALoad(p, t, transField(e), RN(Ti(64), "0"))
     | EField(p, _, t, e, idx) -> transGetField(t, idx, transField(e))
     | _ -> raise(TypeError(4006,e.pos,sprintf "error %A" e))
 
@@ -525,7 +525,7 @@ and transField(e: E): R =
  *)
 and transAssign(t: T, a: E, b: E): R =
     match a with
-    | EId(p, _, a) -> add(LLNop(sprintf "EId %A" a)); transStore(Env.findR(a), transLocal(b))
+    | EId(p, _, a) -> add(LLNop(sprintf "EId %A" a)); transStore(p, Env.findR(p, a), transLocal(b))
     | EArray(p, t, e, idx) -> transAStore(t, transField(e), transLocal(idx), transLocal(b))
     | EPtr(p, t, e) -> transAStore(t, transField(e), RN(Ti(64), "0"), transLocal(b))
     | EField(p, _, t, e, idx) ->

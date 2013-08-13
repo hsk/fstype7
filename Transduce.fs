@@ -204,12 +204,13 @@ and f(o: Token): E =
     | Id(_, "void") -> ENop(o.p, Tv, "void")
     | Id(_, "break") -> EBreak(o.p, Tn)
     | Id(_, "continue") -> EContinue(o.p, Tn)
-    | Id(_, a) -> EId(o.p, Tn, a)
+    | Id(_, a) -> printfn "%A" o ; EId(o.p, Tn, a)
     | Msg(a, Id(_, "("), b, Id(_, ")")) ->
         let o = f(a)
         ECall(o.pos, Tn, o, prms(b))
     | Bin(a, Id(_, "."), Id(_, b)) ->
         let o = f(a)
+        printfn "o=%A %A" o o.pos
         EField(o.pos, Tn, Tn, o, b)
     | St(Id(_, "if"), Id(_, "("), a, Id(_, ")"), Bin(b, Id(_, "else"), c)) ->
         EIf(o.p, Tn, f(a), f(b), f(c))

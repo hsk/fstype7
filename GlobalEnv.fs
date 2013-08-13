@@ -50,13 +50,13 @@ let addTypeDef(id: string, t: T):unit =
 (**
  * シンボルを検索
  *)
-let mapfind(id:string):T =
+let mapfind(p:P, id:string):T =
     try
         globalmap |> List.find (fun(id2, t) -> id = id2) |> fun(a,b) -> b
     with
     | e ->
         printfn "global %A env %A " globalmap envmap
-        raise (TypeError(3601, P0, sprintf "%s not found." id))
+        raise (TypeError(3601, p, sprintf "%s not found." id))
 (**
  * シンボル検索
  *)

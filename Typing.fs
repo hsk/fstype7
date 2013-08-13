@@ -66,7 +66,7 @@ let autoCastBinT(e: E, a1: E, b1: E): E =
  *)
 let unifyBinT(f: E, a: E, b: E): E =
 
-    // printfn "unifyBinT\nf=%A\na=%A\nb=%A" f a b
+    //printfn "unifyBinT\nf=%A\na=%A\nb=%A" f a b
     match (a.t, b.t) with
     // aとbが同じなら親も同じにする
     | (t1, t2) when (t1.stripType(a.pos, []) = t2.stripType(b.pos, [])) -> EAssign(f.pos, t1, a, b)
@@ -150,6 +150,9 @@ let rec typingLocal(pt: T, e: E): E =
             if Env.contains(a) then
                 raise(TypeError(3012,e.pos, a + " is already defined "))
             let c2 = typingLocal(pt, c)
+            if c2.t = Tv then
+                raise(TypeError(3021,e.pos, a + " type void error "))
+            
             Env.addTypeDef(a, c2.t)
             f(p, c2.t, a, c2)
         | _ ->
@@ -321,7 +324,7 @@ let rec typingLocal(pt: T, e: E): E =
     | EId(p, t, id: string) ->
         match t with
         | Tn ->
-            let t2 = Env.find(id)
+            let t2 = Env.find(p, id)
             // 型が決まらなかったらエラー
             if (t2 = Tn) then
                 raise (TypeError(3018, e.pos, "found undefined id '" + id + "'"))
@@ -332,7 +335,7 @@ let rec typingLocal(pt: T, e: E): E =
         let id2 = typingLocal(Tn, id)
         let rec aa(t: T): T =
             match t with
-            | TDef(n) -> aa(Env.find(n))
+            | TDef(n) -> aa(Env.find(p, n))
             | TArr(t, s) -> t
             | Tp(t) -> t
             | t -> t
@@ -343,17 +346,17 @@ let rec typingLocal(pt: T, e: E): E =
         let rec f(t: T): T = 
             //printfn "f t = %A envmap %A" t envmap
             match t with
-            | TDef(id) -> f(Env.find(id))
+            | TDef(id) -> f(Env.find(p, id))
             | TStr(m) ->
                 match List.tryFind (fun (s,_) -> s = id) m with
                 | None ->
-                    raise( TypeError(3019, e.pos, "has not have " + a2.t.ttos + " " + id))
+                    raise( TypeError(3019, p, "type " + a2.t.ttos + " not have " + id))
                 | Some(s,t) -> t 
             | TCls(m) ->
                 //printfn "a=%A a2=%A m=%A" a a2 m
                 match List.tryFind (fun (s,_) -> s = id) m with
                 | None ->
-                    raise( TypeError(3042, e.pos, "has not have " + a2.t.ttos + " " + id))
+                    raise( TypeError(3042, p, "type " + a2.t.ttos + " not have " + id))
                 | Some(s,t) -> t 
             | Tp(t1) -> f(t1)
             | _ -> raise( TypeError(3020,p,"error"))

@@ -1,0 +1,14 @@
+///>name error 3042
+/*** result
+(3042,13)
+result ***/
+
+
+typedef A = class {
+	a:int
+}
+def main() {
+
+	var a:A
+	a.b = 555
+}

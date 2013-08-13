@@ -1,0 +1,12 @@
+///>name error 3028
+/*** result
+(3028,8)
+result ***/
+
+def a(a:double) {}
+
+var c = a(10.0)
+
+def main() {
+
+}

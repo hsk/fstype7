@@ -1,0 +1,11 @@
+///>name error 3025
+/*** result
+(3025,10)
+result ***/
+
+def a(a:double) {}
+
+def main() {
+
+	a(10)
+}

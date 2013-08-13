@@ -36,38 +36,36 @@ val GL_FRONT_AND_BACK:int = 0x0408
 
 def exit(a:int):void
 
-var fullscreen:int = 0
+val fullscreen:int = 0
 
 var gameover:Ptr[GameOver]
 var ship:Ptr[Ship]
 
 var enemies:Array[Ptr[Enemy],10]
-var enemiesCnt:int = 10
+val enemiesCnt:int = 10
 var bullets:Array[Ptr[Bullet],50]
-var bulletsCnt:int = 50
+val bulletsCnt:int = 50
 var particles:Array[Ptr[Particle], 50]
-var particlesCnt:int = 50
+val particlesCnt:int = 50
 var shots:Array[Ptr[Shot],10]
-var shotsCnt:int = 10
+val shotsCnt:int = 10
 var score:int = 0
 var rank:int = 0
 var randomValue:int = 1143241
 var key:Ptr[Key]
 
-
-
 def main(argc:int, argv:Ptr[Ptr[char]]) {
+
 	key = newKey()
 	ship = newShip(0.0, 0.0)
 	ship.init()
 	
 	gameover = new GameOver
 	
-/*
-	gameover.text = "GAME OVER";
-	gameover.y = 200;
-	gameover.x = 200;
-*/
+	gameover.text = "GAME OVER"
+	gameover.y = 200
+	gameover.x = 200
+
 	var i:int
 	for(i = 0; i < bulletsCnt;i++) {
 		bullets[i] = newBullet()
@@ -76,9 +74,11 @@ def main(argc:int, argv:Ptr[Ptr[char]]) {
 	for(i = 0; i < particlesCnt;i++) {
 		particles[i] = newParticle()
 	}
+
 	for(i = 0; i < shotsCnt;i++) {
 		shots[i] = newShot()
 	}
+
 	for(i = 0; i < enemiesCnt;i++) {
 		enemies[i] = newEnemy()
 	}
@@ -91,9 +91,9 @@ def main(argc:int, argv:Ptr[Ptr[char]]) {
   	} else {
 		glutCreateWindow(argv[0])
   	}
-  	//  glutFullScreen()
+  	// glutFullScreen()
   	glutInitDisplayMode(GLUT_RGBA)
-  	//glEnable(GL_DEPTH_TEST)
+  	// glEnable(GL_DEPTH_TEST)
   	glEnable(GL_BLEND)
   	glEnable(GL_LIGHTING)
   	glEnable(GL_LIGHT0)
@@ -129,15 +129,17 @@ def onEnter() {
 			enemy.move(enemy)
 		}
 	}
-	if(cnt == 0 || random()*100 < rank) {
-		var rn1 = random()*3
+
+	if(cnt == 0 || random() * 100 < rank) {
+		var rn1 = random() * 3
 		var rnd = cast(int)(rn1)
-		switch(rnd) {
-		case 0: addEnemy(0.0, random() * 200.0, 0.0); break
-		case 1: addEnemy(random() * 465.0, 0.0, PI / 2.0); break
-		case 2: addEnemy(465.0, random() * 200.0, PI); break
+		rnd is {
+			0? addEnemy(0.0, random() * 200.0, 0.0) break
+			1? addEnemy(random() * 465.0, 0.0, PI / 2.0) break
+			2? addEnemy(465.0, random() * 200.0, PI) break
 		}
 	}
+
 	if (gameover.visible && key.start) {
 		score = 0
 		rank = 1
@@ -163,7 +165,6 @@ def onEnter() {
 	for (i = 0; i < shotsCnt; i++) {
 		var s = shots[i]
 		if (s.visible) {
-			/*
 			for (var j = 0; j < enemiesCnt; j++) {
 				var enemy = enemies[j]
 				if(enemy.visible && abs(enemy.x - s.x) < 30 && abs(enemy.y - s.y) < 30) {
@@ -172,7 +173,7 @@ def onEnter() {
 					addParticles(enemy.x, enemy.y, 30)
 					enemy.visible = false
 				}
-			}*/
+			}
 			s.move()
 		}
 	}
@@ -180,7 +181,7 @@ def onEnter() {
 		var p = particles[i]
 		if(p.visible) p.move()
 	}
-//	txt.text = "SCORE "+score;
+	// txt.text = "SCORE "+score;
 }
 
 def glFrustum(a:double,b:double,c:double,d:double,e:double,f:double):void
@@ -200,11 +201,11 @@ def main_display() {
   	glMatrixMode(GL_PROJECTION)
   	glLoadIdentity()
 
-  	//視野角,アスペクト比(ウィンドウの幅/高さ),描画する範囲(最も近い距離,最も遠い距離)
+  	// 視野角,アスペクト比(ウィンドウの幅/高さ),描画する範囲(最も近い距離,最も遠い距離)
   	gluPerspective(90.0, cast(double)WIDTH / cast(double)HEIGHT, 1.0, 10000.0)
-// 	glFrustum(-1*cast(double)WIDTH, cast(double)WIDTH * 1.0, cast(double)HEIGHT * 1.0, cast(double)HEIGHT * -0.5, cast(double)HEIGHT, 100000.0);
+	// glFrustum(-1*cast(double)WIDTH, cast(double)WIDTH * 1.0, cast(double)HEIGHT * 1.0, cast(double)HEIGHT * -0.5, cast(double)HEIGHT, 100000.0);
  	// ライトの設定
- 	var n:float = 10.0
+ 	val n:float = 10.0
  	var lightpos:Array[float,4]
 
  	lightpos[0] = 500.0 * n
@@ -216,7 +217,7 @@ def main_display() {
   	glMatrixMode(GL_MODELVIEW)
   	glLoadIdentity()
   	glBlendFunc(GL_SRC_ALPHA, GL_ONE)
-  	gluLookAt(0.0,0.0,320.0, //カメラの座標
+  	gluLookAt(0.0,0.0,320.0, // カメラの座標
 		0.0,0.0,0.0, // 注視点の座標
 		0.0,1.0,0.0) // 画面の上方向を指すベクトル 
 		
@@ -235,7 +236,7 @@ def main_display() {
 
 	for (i = 0; i < bulletsCnt; i++) {
 		var b = bullets[i]
-		if(b.visible) {
+		if (b.visible) {
 			b.draw()
 		}
 	}
@@ -249,7 +250,7 @@ def main_display() {
 
 	for (i = 0; i < particlesCnt; i++) {
 		var p = particles[i]
-		if(p.visible) p.draw()
+		if (p.visible) p.draw()
 	}
    
   	glFlush()
@@ -269,16 +270,17 @@ def addBulletN(x:double, y:double, rad:double, n:int, r:double) {
 
 def addBullet(x:double, y:double, rad:double) {
 	for (var i:int = 0; i < bulletsCnt; i++) {
-		var b = bullets[i]
-		if(b.visible) continue
-		b.init(x, y, rad)
-		return
+		val b = bullets[i]
+		if (!b.visible) {
+			b.init(x, y, rad)
+			return
+		}
 	}
 }
 
 def addShot(x:double, y:double, rad:double) {
 	for (var i:int = 0; i < shotsCnt; i++) {
-		var b = shots[i]
+		val b = shots[i]
 		if(!b.visible) {
 			b.init(x, y, rad)
 			return
@@ -288,7 +290,7 @@ def addShot(x:double, y:double, rad:double) {
 
 def addParticle(x:double, y:double, rad:double) {
 	for (var i:int = 0; i < particlesCnt; i++) {
-		var b = particles[i]
+		val b = particles[i]
 		if(!b.visible) {
 		  b.init(x, y, rad)
 		  return
@@ -298,12 +300,11 @@ def addParticle(x:double, y:double, rad:double) {
 
 def addEnemy(x:double, y:double, rad:double) {
 	for (var i:int = 0; i < enemiesCnt; i++) {
-		var b = enemies[i]
-		if(b.visible) continue
-		println("enemy_init")
-		print_i(i)
-		b.init(x, y, rad)
-		return
+		val b = enemies[i]
+		if(!b.visible) {
+			b.init(x, y, rad)
+			return
+		}
 	}
 }
 
@@ -326,27 +327,33 @@ typedef Key = class {
 	start:int
 
 	def init() {
-		this.up = this.down = this.left = this.right = this.space = this.shot = this.start = 0
+		this.up =
+		this.down =
+		this.left =
+		this.right =
+		this.space =
+		this.shot =
+		this.start = 0
 	}
 
 	def downKey(k:byte) {
 		k is {
-		GLUT_KEY_UP? this.up = 1 break
-		GLUT_KEY_DOWN? this.down = 1 break
-		GLUT_KEY_LEFT? this.left = 1 break
-		GLUT_KEY_RIGHT? this.right = 1 break
-		GLUT_KEY_SPACE? this.start = this.shot = this.space = 1 break
+			GLUT_KEY_UP? this.up = 1 break
+			GLUT_KEY_DOWN? this.down = 1 break
+			GLUT_KEY_LEFT? this.left = 1 break
+			GLUT_KEY_RIGHT? this.right = 1 break
+			GLUT_KEY_SPACE? this.start = this.shot = this.space = 1 break
 		}
 	}
 	
 	def upKey(k:byte) {
 		k is {
-		GLUT_KEY_UP? this.up = 0 break
-		GLUT_KEY_DOWN? this.down = 0 break
-		GLUT_KEY_LEFT? this.left = 0 break
-		GLUT_KEY_RIGHT? this.right = 0 break
-		GLUT_KEY_SPACE? this.start = this.shot = this.space = 0 break
-		27? glutLeaveGameMode() exit(0) break
+			GLUT_KEY_UP? this.up = 0 break
+			GLUT_KEY_DOWN? this.down = 0 break
+			GLUT_KEY_LEFT? this.left = 0 break
+			GLUT_KEY_RIGHT? this.right = 0 break
+			GLUT_KEY_SPACE? this.start = this.shot = this.space = 0 break
+			27? glutLeaveGameMode() exit(0) break
 		}
 	}
 }
@@ -367,6 +374,9 @@ def upKey(k:byte, x:int, y:int) {
 
 typedef GameOver = class {
 	visible:bool
+	x:double
+	y:double
+	text:Ptr[byte]
 }
 
 typedef Ship = class {
@@ -396,16 +406,15 @@ typedef Ship = class {
 	  
 		if(this.timer > 300) this.exists = true
 		
-		if(key.shot)addShot(this.x, this.y, -PI / 2)
-		if(key.left)this.x -= this.speed
-		if(key.right)this.x += this.speed
-		if(key.up)this.y -= this.speed
-		if(key.down)this.y += this.speed
+		if(key.shot) addShot(this.x, this.y, -PI / 2)
+		if(key.left) this.x -= this.speed
+		if(key.right) this.x += this.speed
+		if(key.up) this.y -= this.speed
+		if(key.down) this.y += this.speed
 		
 		if(this.x < 0) this.x = 5 else if(this.x > 465) this.x = 465 - 5
 		if(this.y < 0) this.y = 5 else if(this.y > 465) this.y = 465 - 5
 		
-		if(x != this.x) print_d(this.x)
 	}
 
 	def draw() {
@@ -473,20 +482,24 @@ typedef Enemy = class {
 		glPopMatrix() 
 	}
 
-
 	def moveBody():double = {
-		var rad2:double = atan2(ship.y - this.y, ship.x - this.x)
+	
+		val rad2:double = atan2(ship.y - this.y, ship.x - this.x)
+
 		if (normalRad(this.rad - rad2) < 0) this.rad += this.r
 		else this.rad -= this.r
+
 		this.rad = normalRad(this.rad)
 		this.x += cos(this.rad) * this.speed
 		this.y += sin(this.rad) * this.speed
+		
 		if(this.x < 0) this.x = 5 else if(this.x > 465) this.x = 465 - 5
 		if(this.y < 0) this.y = 5 else if(this.y > 465) this.y = 465 - 5
-		return rad2
+
+		rad2
 	}
 
-	def wait(w:int,next:(Ptr[Enemy])=>void) {
+	def wait(w:int, next:(Ptr[Enemy])=>void) {
 		this.time = w
 		this.move = Enemy_moveWait
 		this.nextMove = next
@@ -508,34 +521,36 @@ def newEnemy():Ptr[Enemy] = {
 def Enemy_moveWait(this:Ptr[Enemy]) {
 	this.moveBody()
 	this.time -= 1
-	if(this.time <= 0) {
+	if (this.time <= 0) {
 		this.move = this.nextMove
 	}
 }
 
 def Enemy_move1(this:Ptr[Enemy]) {
-	println("enemy_move1")
-	print_d(this.x)
-	print_d(this.y)
-	var r:double = this.moveBody()
-	if(random() > 0.8) {
+	val r:double = this.moveBody()
+	if (random() > 0.8) {
 		addBullet(this.x, this.y, this.r)
-		if(random() > 0.8) {
+		if (random() > 0.8) {
 			this.r2 = 0
-			this.wait(30, Enemy_move2);
+			this.wait(30, Enemy_move2)
 		}
 	}
 }
 
 def Enemy_move2(this:Ptr[Enemy]) {
-	var r:double = this.moveBody()
-	var rr:int = cast(int)(random() * 5.0 + 1.0)
+	val r:double = this.moveBody()
+	val rr:int = cast(int)(random() * 5.0 + 1.0)
 	addBulletN(this.x, this.y, r + this.r2, rr, 0.1)
-	this.r2 = this.r2 + cast(double)rr * 0.1
-	if(random() < 0.03)this.wait(60, Enemy_move1)
+
+	this.r2 += cast(double)rr * 0.1
+
+	if (random() < 0.03) {
+		this.wait(60, Enemy_move1)
+	}
 }
 
 typedef Particle = class {
+
 	x:double
 	y:double
 	visible:bool
@@ -553,9 +568,9 @@ typedef Particle = class {
 	def draw() {
 		glPushMatrix()
 		glTranslated(this.x, this.y, 0.0)
-
-		var x = 5.0
-		var y = 5.0
+		
+		val x = 5.0
+		val y = 5.0
 		glBegin(GL_POLYGON)
 			color(1.0,0.5,1.0,0.0)
 			glNormal3d(0.0,0.0,1.0)
@@ -569,17 +584,20 @@ typedef Particle = class {
 
 
 	def move():bool = {
-		this.x += cos(this.rad)*this.speed
-		this.y += sin(this.rad)*this.speed
-		if(this.x < 0 || 465 < this.x || this.y < 0 || 465 < this.y)
+
+		this.x += cos(this.rad) * this.speed
+		this.y += sin(this.rad) * this.speed
+
+		if (this.x < 0 || 465 < this.x || this.y < 0 || 465 < this.y)
 			this.visible = false
+
 		this.visible
 	}
 
 }
 
 def newParticle():Ptr[Particle] = {
-	var this = new Particle
+	val this = new Particle
 	this.speed = 5
 	this.visible = false
 	this
@@ -603,8 +621,8 @@ typedef Bullet = class {
 		glPushMatrix()
 		glTranslated(this.x, this.y, 0.0)
 
-		var x = 5.0
-		var y = 5.0
+		val x = 5.0
+		val y = 5.0
 		glBegin(GL_POLYGON)
 			color(1.0,0.5,1.0,0.0)
 			glNormal3d(0.0,0.0,1.0)
@@ -620,7 +638,7 @@ typedef Bullet = class {
 		this.x += cos(this.rad)*this.speed
 		this.y += sin(this.rad)*this.speed
 		if(this.x < 0 || 465 < this.x || this.y < 0 || 465 < this.y)
-		this.visible = false
+			this.visible = false
 		this.visible
 	}
 
@@ -628,7 +646,7 @@ typedef Bullet = class {
 }
 
 def newBullet():Ptr[Bullet] = {
-	var this = new Bullet
+	val this = new Bullet
 	this.visible = false
 	this.speed = 10
 	this
@@ -638,7 +656,6 @@ typedef Shot = class {
 	x:double
 	y:double
 	visible:bool
-	angle:double
 	speed:double
 	rad:double
 
@@ -653,8 +670,8 @@ typedef Shot = class {
 		glPushMatrix() 
 		glTranslated(this.x, this.y, 0.0)
 
-		var x = 5.0
-		var y = 5.0
+		val x = 5.0
+		val y = 5.0
 		glBegin(GL_POLYGON)
 			color(1.0,0.5,1.0,0.5)
 			glNormal3d(0.0,0.0,1.0)
@@ -677,7 +694,7 @@ typedef Shot = class {
 }
 
 def newShot():Ptr[Shot] = {
-	var this = new Shot
+	val this = new Shot
 	this.speed = 25
 	this.visible = false
 	this

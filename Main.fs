@@ -187,7 +187,7 @@ let test_main(args: string []):int =
         Test.test("test/test_val/test_0004.lll")
         Test.test("test/test_val/test_0005.lll")
         *)
-        Test.test("test/test_class/test_0008.lll")
+        //Test.test("test/test_class/test_0008.lll")
         //Test.test("test/test_global_var/test_0005.lll")
         // Test.test("test/test_global_var/test_0004.lll")
         //        Test.test("test/test_byte/test_0006.lll")
@@ -302,6 +302,7 @@ let main2 (args:string []):int =
 
 [<EntryPoint>]
 let main(args:string []):int =
+    //Test.test("test/test_error/test_0001.lll")
     //test_main args
     // main1 args
     main2 args

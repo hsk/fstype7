@@ -77,7 +77,7 @@ type ConstFold(parent: Option<ConstFold>) =
             | LLField(id, id2, id3, id4) -> add(LLField(id, this.expand(id2), this.expand(id3), this.expand(id4)))
             | LLStore(id1, id2) -> add(LLStore(this.expand(id1), this.expand(id2)))
             | LLLoad(id1, id2) ->
-                let id22 = this.stripPointerT(this.expand(id2))
+                let id22 = this.stripPointerT(P0, this.expand(id2))
                 if (this.expand(id2) <> id2) then
                     map <- map.Add(id1.id, id22)
                 else
@@ -114,8 +114,8 @@ type ConstFold(parent: Option<ConstFold>) =
      *
      * ポインタの型は内部の型を取り出して返却します。
      *)
-    member this.stripPointerT(a: R): R =
-        match KNormal.tName2(a.t) with
+    member this.stripPointerT(p:P, a: R): R =
+        match KNormal.tName2(p, a.t) with
         | "a" | "p" when(map.ContainsKey(a.id)) ->
             match map.Item(a.id).t.stripType(P0, []) with
             | Tp(t2) -> a.setT(t2)

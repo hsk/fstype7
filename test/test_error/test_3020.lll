@@ -1,0 +1,10 @@
+///>name error 3020 line 9
+/*** result
+(3020,9)
+result ***/
+
+def main() {
+
+	var a:int
+	a.b = 555
+}

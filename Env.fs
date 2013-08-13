@@ -31,13 +31,13 @@ let init(p: (string *T) list):unit =
 (**
  * シンボル検索
  *)
-let find(id:string):T =
+let find(p:P, id:string):T =
     try
         let (_, b) = List.find (function | (id2, t) -> id = id2) envmap
         b
     with
         e ->
-            GlobalEnv.mapfind(id)
+            GlobalEnv.mapfind(p, id)
 
 (**
  * シンボル検索
@@ -49,18 +49,18 @@ let contains(id:string):bool =
     with
         e -> false
 
-let mapfind(id:string):T = find id
+let mapfind(p:P, id:string):T = find(p, id)
 
 (**
  * 検索してレジスタで返却
  *)
-let findR(id: string):R =
+let findR(p:P, id: string):R =
 //    printfn "%A" envmap
     if contains(id) then
-        RL(find(id),id)
+        RL(find(p, id),id)
     else
         try
-            RG(GlobalEnv.mapfind(id),id)
+            RG(GlobalEnv.mapfind(p, id),id)
         with
         | e -> raise(TypeError(3701, P0, "not found "+id))
 
@@ -70,13 +70,13 @@ let findR(id: string):R =
 let addTypeDef(id: string, t: T):unit =
     envmap <- (id, t) :: envmap
 
-let getFieldNo(id: string, field: string):int =
+let getFieldNo(p:P, id: string, field: string):int =
     let rec getNo(no:int, m:(string * T) list):int =
         match m with
         | [] -> raise (TypeError(3702, P0, "not found " + field))
         | (name,t)::xs when (name = field) -> no
         | x::xs -> getNo(no + 1, xs)
-    match mapfind(id) with
+    match mapfind(p, id) with
     | TStr(m) -> getNo(0, m)
     | TCls(m) -> getNo(0, m)
     | _ -> raise(TypeError(3703, P0, "error"))
@@ -91,21 +91,21 @@ let add(id: string, t: T):unit =
 (**
  * サイズ計算
  *)
-let rec size(t: T): int64 =
+let rec size(p:P, t: T): int64 =
     match t with
     | Ti(i) -> (int64 i) / 8L
     | Tu(i) -> (int64 i) / 8L
     | Tf -> 4L
     | Td -> 8L
     | Tp(_) -> 8L
-    | TDef(id) -> size(find(id)) 
-    | TArr(t, s) -> size(t) * s
-    | TStr(m) -> List.fold (fun a (t, b) -> a + size(b)) 0L m
-    | TCls(m) -> List.fold (fun a (t, b) -> a + size(b)) 0L m
+    | TDef(id) -> size(p, find(p, id)) 
+    | TArr(t, s) -> size(p, t) * s
+    | TStr(m) -> List.fold (fun a (t, b) -> a + size(p, b)) 0L m
+    | TCls(m) -> List.fold (fun a (t, b) -> a + size(p, b)) 0L m
     | TFun _ -> 8L
     | TDlg _ -> 8L
     | Tn -> -1L
-    | _ -> raise(TypeError(3704, P0, "size calculate error"))
+    | _ -> raise(TypeError(3704, p, "size calculate error"))
 
 (**
  * valの追加

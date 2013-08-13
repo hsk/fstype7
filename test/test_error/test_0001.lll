@@ -1,0 +1,11 @@
+///>name error 3021
+/*** result
+(3021,10)
+result ***/
+
+def a(a:double) {}
+
+def main() {
+
+	var c = a(10.0)
+}

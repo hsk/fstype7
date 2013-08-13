@@ -3,20 +3,22 @@ module AST
 open System
 
 type P(src:string, no:int) =
-    member this.no
-        with get() = no
-    override this.ToString():string = this.p()
-    
-    member this.p():string =
-        let rec getLineNo(start:int, line:int):string =
+    member this.no = 
+        let rec getLineNo(start:int, line:int):int =
             let index = src.IndexOf('\n', start)
-            if (index < 0) then
-                "EOF"
-            else if (index >= this.no) then
-                "(" + line.ToString() + ")"
+            if (index < 0) then 0
+            else if (index >= no) then
+                line
             else
                 getLineNo(index+1, line + 1)
         getLineNo(0, 1)
+    
+    override this.ToString():string = this.p()
+    
+    member this.p():string =
+        match this.no with
+        | 0 -> "EOF"
+        | a -> "(" + a.ToString() + ")"
 
 let P0 = P("", 0)
 
@@ -600,7 +602,45 @@ let EPrint (p:P, t:T, e:E):E =
 type E with
     member this.pos =
         match this with
-        | _ -> P0
+        | EVar(p,_,_,_) -> p
+        | EVal(p,_,_,_) -> p
+        | EBlock(p,t,_) -> p
+        | ELd(p,t,_) -> p
+        | ELdd(p,t,_) -> p
+        | ELds(p,t,_) -> p
+        | EId(p,t,_) -> p
+        | EArray(p,t,_,_) -> p
+        | EBin(p,t,_,_,_,_) -> p
+        | ENeg(p,t,_) -> p
+        | ENot(p,t,_) -> p
+        | EAssign(p,t,_,_) -> p
+        | ENewArray(p,t,_) -> p
+        | ENew(p,t) -> p
+        | EGCNew(p,t) -> p
+        | ERef(p,t,_) -> p
+        | EPtr(p,t,_) -> p
+        | EField(p,t,_,_,_) -> p
+        | ETypeDef(p,t,_) -> p
+        | ENop(p,t,_) -> p
+        | ECall(p,t,_,_) -> p
+        | EFun(p,t,_,_,_) -> p
+        | EMethod(p,t,_,_,_) -> p
+        | EIf(p,t,_,_,_) -> p
+        | EWhile(p,t,_,_) -> p
+        | EDo(p,t,_,_) -> p
+        | EFor(p,t,_,_,_,_) -> p
+        | ESwitch(p,t,_,_) -> p
+        | EGoto(p,t,_) -> p
+        | ELabel(p,t,_,_) -> p
+        | EBreak(p,t) -> p
+        | EContinue(p,t) -> p
+        | ECase(p,t,_,_) -> p
+        | ESizeOf(p,t,_,_) -> p
+        | ERet(p,t,_) -> p
+        | ECast(p,t,_) -> p
+        | ETuple(p,t,_) -> p
+        | EImport(p,_) -> p
+        | ENull(p) -> p
     member this.t =
         match this with
         | EVar(p,_,_,_) -> Tv

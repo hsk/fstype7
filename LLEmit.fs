@@ -176,9 +176,9 @@ let rec output(l: LL):unit =
             p(r, "uitofp " + b.t.p + " " + b.p + " to " + r.t.p)
         | (Tu _, Td) | (Tu _, Tf) ->
             p(r, "fptoui " + b.t.p + " " + b.p + " to " + r.t.p)
-        | _ when (Env.size(r.t) = Env.size(b.t)) ->
+        | _ when (Env.size(P0, r.t) = Env.size(P0, b.t)) ->
             p(r, "bitcast " + b.t.p + " " + b.p + " to " + r.t.p)
-        | _ when (Env.size(r.t) > Env.size(b.t)) ->
+        | _ when (Env.size(P0, r.t) > Env.size(P0, b.t)) ->
             p(r, "zext " + b.t.p + " " + b.p + " to " + r.t.p)
         | _ ->
             p(r, "trunc " + b.t.p + " " + b.p + " to " + r.t.p)

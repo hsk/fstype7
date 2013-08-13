@@ -1,0 +1,10 @@
+///>name error 3028 line 9
+/*** result
+(3028,9)
+result ***/
+
+def main() {
+
+	var a:int
+	a()
+}
