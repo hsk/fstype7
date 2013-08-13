@@ -873,6 +873,9 @@
     <None Include="test\test_class\test_0010.lll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Include="bin\Release\sample\opengl">
+      <Link>download\opengl</Link>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Content Include="test\test_chars\test_0001.lll">
