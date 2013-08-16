@@ -1,0 +1,9 @@
+///>name error 2003
+/*** result
+(2003,8)
+result ***/
+
+
+type A = class {
+	a
+}

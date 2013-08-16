@@ -4,6 +4,6 @@
 ,)
 result ***/
 def main() {
-	if (10 <= 20) print_i(1)
+	if (-10 <= 20) print_i(1)
 	else print_i(2)
 }

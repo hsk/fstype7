@@ -1,0 +1,6 @@
+///>name error 2001
+/*** result
+(2002,6)
+result ***/
+
+var a:if(1)5

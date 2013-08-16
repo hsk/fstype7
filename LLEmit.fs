@@ -52,16 +52,16 @@ let rec output(l: LL):unit =
         let ps = String.Join(", ", List.map (fun (a:R) -> a.t.p + " " + a.p ) prms)
 
         match id.t with
-        | Tv -> Asm.p("call " + id.t.p2 + " " + r.p + "(" + ps + ") nounwind ssp")
+        | Tv -> Asm.p__("call " + id.t.p2 + " " + r.p + "(" + ps + ") nounwind ssp")
         | _ -> p(id, "call " + id.t.p2 + " " + r.p + "(" + ps + ") nounwind ssp")
 
     | LLUnary(id, op, a) ->
 
-        match (a.t, op) with
+        match (a.t.stripType(P0,[]), op) with
         | (Ti _, "not") ->
             let r = KNormal.genRL(Ti(1))
             p(r, "icmp eq " + a.t.p + " 0, " + " " + a.p)
-            p(id, "zext i1 " + r.p + " to " + id.t.p)
+            p(id, "sext i1 " + r.p + " to " + id.t.p)
         | (Ti _, "neg") -> p(id, "sub " + a.t.p + " 0, " + a.p)
         | (Tf, "neg") | (Td, "neg") -> p(id, "fsub " + a.t.p + " 0.0, " + a.p)
         | _ -> raise(TypeError(5001,P0,sprintf "error %A" l))
@@ -88,7 +88,7 @@ let rec output(l: LL):unit =
             | "lt" | "le" | "gt" | "ge" | "eq" | "ne" ->
                 let r2 = KNormal.genRL(Ti(1))
                 p(r2, "fcmp o" + op + " " + a.t.p + " " + a.p + ", " + b.p)
-                p(r, "zext i1 " + r2.p + " to i64")
+                p(r, "sext i1 " + r2.p + " to i64")
             | _ ->
                 p(r, "f" + op + " " + r.t.p + " " + a.p + ", " + b.p)
         | (Ti(_), "div") -> p(r, "sdiv " + r.t.p + " " + a.p + ", " + b.p)
@@ -100,11 +100,11 @@ let rec output(l: LL):unit =
             | "eq" | "ne" ->
                 let r2 = KNormal.genRL(Ti(1))
                 p(r2, "icmp " + op + " " + a.t.p + " " + a.p + ", " + b.p)
-                p(r, "zext i1 " + r2.p + " to i64")
+                p(r, "sext i1 " + r2.p + " to i64")
             | "lt" | "le" | "gt" | "ge" ->
                 let r2 = KNormal.genRL(Ti(1))
                 p(r2, "icmp s" + op + " " + a.t.p + " " + a.p + ", " + b.p)
-                p(r, "zext i1 " + r2.p + " to i64")
+                p(r, "sext i1 " + r2.p + " to i64")
             | _ ->
                 p(r, op + " " + r.t.p + " " + a.p + ", " + b.p)
 
@@ -115,7 +115,6 @@ let rec output(l: LL):unit =
         Asm.p__("store " + s.t.p + " " + s.p + ", " + r.t.p + " " + r.p)
 
     | LLAlloca(r: R) ->
-        comment(r.ToString())
         p(r, "alloca " + r.t.p)
 
     | LLField(r: R, addr: R, RNULL, a: R) ->
@@ -156,7 +155,7 @@ let rec output(l: LL):unit =
         ) consts
 
     | LLCast(r: R, b: R) ->
-        comment(sprintf "%A %A" r b)
+        //comment(sprintf "%A %A" r b)
         match (r.t.stripType(P0,[]), b.t.stripType(P0,[])) with
         | (Tp(t), Tp(_)) ->
             p(r, "bitcast " + b.t.p + " " + b.p + " to " + r.t.p)
@@ -179,7 +178,7 @@ let rec output(l: LL):unit =
         | _ when (Env.size(P0, r.t) = Env.size(P0, b.t)) ->
             p(r, "bitcast " + b.t.p + " " + b.p + " to " + r.t.p)
         | _ when (Env.size(P0, r.t) > Env.size(P0, b.t)) ->
-            p(r, "zext " + b.t.p + " " + b.p + " to " + r.t.p)
+            p(r, "sext " + b.t.p + " " + b.p + " to " + r.t.p)
         | _ ->
             p(r, "trunc " + b.t.p + " " + b.p + " to " + r.t.p)
 

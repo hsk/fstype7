@@ -9,23 +9,23 @@ module Compact
 open System
 
 type Pos(src:string, no:int) =
-    member this.no
-        with get() = no
-    member this.src
-        with get() = src
+    member this.no = no
+    member this.line:int =
+        let rec getLineNo(start:int, line:int):int =
+            let index = src.IndexOf('\n', start)
+            if (index < 0) then 0
+            else if (index >= no) then line
+            else getLineNo(index+1, line + 1)
+        getLineNo(0, 1)
+    
+    member this.src = src
 
     override this.ToString():string = this.p()
     
     member this.p():string =
-        let rec getLineNo(start:int, line:int):string =
-            let index = src.IndexOf('\n', start)
-            if (index < 0) then
-                "EOF"
-            else if (index >= this.no) then
-                "(" + line.ToString() + ")"
-            else
-                getLineNo(index+1, line + 1)
-        getLineNo(0, 1)
+        match this.line with
+        | 0 -> "EOF"
+        | n -> "(" + n.ToString() + ")"
 
 let P0 = Pos("", 0)
 
@@ -160,8 +160,8 @@ module Parser =
                             "sizeof", Opl(10);
                             "typedef", Opl(4);
                             "type", Opl(4);
-                            "-", Opl(100);
-                            "*", Opl(99);
+                            "-", Opl(99);
+                            "*", Opl(98);
                             "&", Opl(100);
                             "!", Opl(90);
                             "var", Opl(10);
@@ -192,6 +192,7 @@ module Parser =
                             "=>", OIl(90);
                             ":", OIl(30);
                             "*", OIl(50);
+                            "/", OIl(50);
                             "&", OIl(50);
                             "|", OIl(50);
                             "^", OIl(50);
@@ -199,7 +200,6 @@ module Parser =
                             "<<", OIl(50);
                             ">>", OIl(50);
                             ">>>", OIl(50);
-                            "/", OIl(20);
                             "-", OIl(10);
                             "+", OIl(10);
                             "<", OIl(6);

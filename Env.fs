@@ -49,7 +49,10 @@ let contains(id:string):bool =
     with
         e -> false
 
-let mapfind(p:P, id:string):T = find(p, id)
+let mapfind(p:P, id:string):T =
+    let (_,b) = List.find (function | (id2, t) -> id = id2) envmap
+    b
+
 
 (**
  * 検索してレジスタで返却

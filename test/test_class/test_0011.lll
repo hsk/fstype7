@@ -1,0 +1,11 @@
+///>name class static
+/*** result
+(0,1
+,)
+result ***/
+type ABC = class {
+	static a():int = 1
+}
+def main() {
+	print_i(ABC_a())
+}

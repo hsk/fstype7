@@ -326,11 +326,25 @@ let rec typingLocal(pt: T, e: E): E =
     | EId(p, t, id: string) ->
         match t with
         | Tn ->
-            let t2 = Env.find(p, id)
+                try
+                    let t2 = Env.mapfind(p, id)
+                    if (t2 = Tn) then
+                        raise (TypeError(3018, e.pos, "found undefined id '" + id + "'"))
+                    EId(p, t2, id)
+                with
+                | _ ->
+                    try
+                        let ts = Env.mapfind(p, "this")
+                        typingLocal(pt, EField(p, Tn, t, EId(p,t,"this"), id))
+                    with
+                    | _ ->
+                        let t2 = GlobalEnv.mapfind(p, id)
+                        if (t2 = Tn) then
+                            raise (TypeError(3018, e.pos, "found undefined id '" + id + "'"))
+                        EId(p, t2, id)
+
             // 型が決まらなかったらエラー
-            if (t2 = Tn) then
-                raise (TypeError(3018, e.pos, "found undefined id '" + id + "'"))
-            EId(p, t2, id)
+            
         | _ -> e
 
     | EArray(p, t: T, id: E, idx: E) ->
@@ -369,7 +383,6 @@ let rec typingLocal(pt: T, e: E): E =
             match (as1, ps) with
 
             | ([], []) -> rs
-            | ([], [ENop(_, _, _)]) -> rs
             | (a :: as1, p :: ps) ->
                 let p2 = typingLocal(a, p)
 
@@ -402,9 +415,6 @@ let rec typingLocal(pt: T, e: E): E =
                 | EField(p,TDlg(t1,_,ls1),t2, e, m) ->
                     (EField(p,TDlg(t1,t2,ls1),t2,e,m), e::ls)
                 | _ -> raise(Exception(sprintf "%A" a3))//(a3,ls)
-            
-            
-            //raise (Exception(sprintf "%A %A" prms ls2))
             let e2 = ECall(pos, t2, a4, checkTypes(1, prms, ls2, []) |> List.rev)
 
             e2
@@ -473,8 +483,8 @@ let typingGlobal(e: E): E =
         Env.init(p1)
         funType <- t // 関数の型チェック用。
         let b2 = typingLocal(t, b)
-        match (t, b2.t) with
-            | (Tv, a) -> ()// voidならどんな型でも後でpopするのでok TODO: ここでpopを入れる事の検討
+        match (t.stripType(p,[]), b2.t.stripType(p,[])) with
+            | (Tv, a) -> ()
             | (t, Tr(a)) ->
                 if (t <> a) then
                     raise(TypeError(3036, e.pos,
@@ -548,27 +558,31 @@ let rec checkGlobalType(e: Prog):unit =
 
         // 何かの残骸は読み捨て
         | ENop _ -> ()
-        | EImport(p, id) -> importFile(id + ".lll")
+        | EImport(p, id) -> importFile(p, id + ".lll")
         | e ->
             raise(TypeError(3040, e.pos, sprintf "syntax error found unexpected expression in global scope %A" e))
     match e with
     | Prog(b) -> List.iter f b
 
-and importFile(file:string):unit =
+and importFile(p:P, file:string):unit =
         
     // 再度読み込み防止
     match imports |> List.tryFind (fun a -> file = a) with
     | Some(_) ->
         ()
     | None ->
-        imports <- file::imports
-        let src = Exec.readAll(file)
-        // パース
-        let st = Compact.parse(src)
-        let ast = Transduce.apply(st)
+        try
+            let src = Exec.readAll(file)
+            // パース
+            let st = Compact.parse(src)
+            let ast = Transduce.apply(st)
 
-        // 型付け
-        checkGlobalType(ast)
+            imports <- file::imports
+            // 型付け
+            checkGlobalType(ast)
+        with
+            | :? System.IO.DirectoryNotFoundException -> raise(TypeError(3043, p, "file not found "+file))
+            | :? System.IO.FileNotFoundException -> raise(TypeError(3043, p, "file not found "+file))
         ()
 
 (**

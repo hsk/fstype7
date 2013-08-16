@@ -1,0 +1,6 @@
+///>name error 1006
+/*** result
+(1004,6)
+result ***/
+
+if{b}

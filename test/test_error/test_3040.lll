@@ -1,0 +1,10 @@
+///>name error 3040
+/*** result
+(3040,9)
+result ***/
+
+
+val a=1
+
+"aaaaaaa"
+

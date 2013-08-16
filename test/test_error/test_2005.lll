@@ -1,0 +1,7 @@
+///>name error 2005
+/*** result
+(2005,7)
+result ***/
+
+
+val "aaaaa" = 1

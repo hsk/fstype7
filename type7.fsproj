@@ -8,7 +8,7 @@
     <ProjectGuid>{9AB3ACEA-6046-4FBE-8308-B90CE02486EA}</ProjectGuid>
     <OutputType>Exe</OutputType>
     <RootNamespace>type0</RootNamespace>
-    <AssemblyName>type0</AssemblyName>
+    <AssemblyName>lllc</AssemblyName>
     <BuildOrder>
       <BuildOrder>
         <String>AssemblyInfo.fs</String>
@@ -56,6 +56,7 @@
     <Tailcalls>true</Tailcalls>
     <ConsolePause>false</ConsolePause>
     <Commandlineparameters>sample/shoot.lll sample/opengl.lll -framework OpenGL -framework glut -run</Commandlineparameters>
+    <DefineConstants />
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="mscorlib" />
@@ -88,6 +89,7 @@
     <Folder Include="download\" />
     <Folder Include="test\test_val\" />
     <Folder Include="test\test_class\" />
+    <Folder Include="test\test_ng\" />
   </ItemGroup>
   <ItemGroup>
     <None Include="readme.md">
@@ -711,6 +713,9 @@
     <None Include="test\test_cast\test_0007.lll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Include="test\test_chars\test_0001.lll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Include="test\test_chars\test_0002.lll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
@@ -840,46 +845,92 @@
     <None Include="test\test_class\test_0009.lll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Include="test\test_error\test_3019.lll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="test\test_error\test_3020.lll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="test\test_error\test_3025.lll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="test\test_error\test_3042.lll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="test\test_error\test_0028.lll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="test\test_error\test_0027.lll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="test\test_error\test_0021.lll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="test\test_error\test_0002.lll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="test\test_error\test_0028_2.lll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="test\test_error\test_0001.lll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
     <None Include="test\test_class\test_0010.lll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="bin\Release\sample\opengl">
       <Link>download\opengl</Link>
     </None>
-  </ItemGroup>
-  <ItemGroup>
-    <Content Include="test\test_chars\test_0001.lll">
+    <None Include="test\test_class\test_0011.lll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
+    </None>
+    <None Include="test\test_class\test_0012.lll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="test\test_error\test_1003.lll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="test\test_error\test_1004.lll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="test\test_error\test_1005.lll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="test\test_error\test_1006.lll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="test\test_error\test_1007.lll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="test\test_error\test_2001.lll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="test\test_error\test_2002.lll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="test\test_error\test_2003.lll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="test\test_error\test_2004.lll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="test\test_error\test_2005.lll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="test\test_error\test_3002.lll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="test\test_error\test_3019.lll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="test\test_error\test_3020.lll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="test\test_error\test_3021.lll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="test\test_error\test_3025.lll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="test\test_error\test_3028.lll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="test\test_error\test_3027.lll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="test\test_error\test_3028_2.lll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="test\test_error\test_3040.lll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="test\test_error\test_3042.lll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="test\test_error\test_3043.lll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="test\test_error\test_0001.lll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="sample\ballBlast.lll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="test\test_ng\test_0001.lll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="test\test_class\test_0013.lll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 </Project>

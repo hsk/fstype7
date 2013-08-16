@@ -3,3 +3,4 @@ def sin(a:double):double
 def atan(a:double):double
 def fabs(a:double):double
 def atan2(a:double,b:double):double
+def sqrt(a:double):double

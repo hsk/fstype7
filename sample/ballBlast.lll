@@ -1,0 +1,788 @@
+/*
+// BallBlast.lll
+//  - Blast while balls.
+//  - When the red ball is blasted or the ball reaches the celling,
+//    the game is over.
+//  <Control>
+//   Mouse: Move the red ring.
+//   Click: Blast balls in the red ring.
+*/
+
+import sample.math
+import sample.opengl
+import lib.stdio
+
+type Boolean = int
+
+def main(argc:int, argv:Ptr[Ptr[char]]) {
+	glInit(argc, argv)
+	initialize()
+  	glutMainLoop()
+}
+
+type Vector3D = class {
+    x:double
+    y:double
+    def incrementBy(p:Ptr[Vector3D]) {
+    	this.x += p.x
+    	this.y += p.y
+    }
+    
+    def scaleBy(p:double) {
+    	this.x *= p
+    	this.y *= p
+    }
+}
+
+type Rectangle = struct{
+    x:int
+    y:int
+    width:int
+    height:int
+}
+
+type TextField = class {
+    x:double
+    y:double
+    width:int
+    size:int
+    height:double
+    color:int
+    text:Array[byte,256]
+    align:int
+    def draw() {
+    	drawString(cast(Ptr[byte])text, color, cast(int)x, cast(int)y, size/2, width, align)
+    }
+}
+
+val SCREEN_WIDTH:int = 465
+val SCREEN_HEIGHT:int = 465
+var isMouseClicked:Boolean
+var mousePos:Ptr[Vector3D]
+var rect:Ptr[Rectangle]
+var offset:Ptr[Vector3D]
+var ticks:int
+var scoreField:Ptr[TextField]
+var score:int
+val GAME_OVER_DURATION:int = 150
+val NO_START_DURATION:int = 30
+var gameOverTicks:int = 0
+var lastBall:Ptr[Ball]
+var messageField:Ptr[TextField]
+
+val TEXT_ALIGN_LEFT:int = 0
+val TEXT_ALIGN_CENTER:int = 1
+val TEXT_ALIGN_RIGHT:int = 2
+val null = 0
+
+
+def initialize() {
+    mousePos = new Vector3D
+    rect = new Rectangle
+    offset = new Vector3D
+    scoreField = new TextField
+    messageField = new TextField
+    lastBall = null
+	var i:int
+    for(var i:int = 0; i < ballsLength; i++) {
+        balls[i] = new Ball()
+    }
+    for(var i:int = 0; i < sparksLength; i++) {
+        sparks[i] = new Spark()
+    }
+    
+    glutMouseFunc(mouseCallback)
+    glutPassiveMotionFunc(mouseMove)
+	glutMotionFunc(mouseMove)
+
+    Field_initialize()
+    initializeBlurs()
+    scoreField = createTextField(SCREEN_WIDTH - 100, 0, 100, 24, 0xff6666, TEXT_ALIGN_RIGHT)
+    messageField = createTextField(0, 0, SCREEN_WIDTH, 36, 0xff6666, TEXT_ALIGN_CENTER)
+    startTitle()
+}
+
+var mouseX:double
+var mouseY:double
+
+def mouseCallback(button:int, state:int, x:int, y:int) {
+    mouseX = cast(double)x
+    mouseY = cast(double)y
+
+	if(GLUT_DOWN == state && GLUT_LEFT_BUTTON == button) {
+	    isMouseClicked = true
+	}
+}
+
+def mouseMove(x:int, y:int) {
+    mouseX = cast(double)x
+    mouseY = cast(double)y
+}
+
+
+def update() {
+    mousePos.x = mouseX - SCREEN_WIDTH / 2
+    mousePos.y = mouseY - SCREEN_HEIGHT / 2
+    if (isMouseClicked) {
+        isMouseClicked = false
+        if (gameOverTicks < 0) blastBalls(mousePos)
+        else if (gameOverTicks > NO_START_DURATION) startGame()
+    }
+    
+    updateBlurs()
+    updateSparks()
+    
+    for(var i:int = 0; i < ballsLength; i++) {
+        val b = balls[i]
+        if(b.visible) b.update()
+    }
+    
+    for(var i:int = 0; i < ballsLength; i++) {
+        val b = balls[i]
+        if(b.visible && !b.isRed) b.draw()
+    }
+    for(var i:int = 0; i < ballsLength; i++) {
+        val b = balls[i]
+        if (b.visible && b.isRed)  b.draw()
+    }
+    
+    if (gameOverTicks < 0) drawBlastCircle()
+
+
+    if (gameOverTicks < 0 || gameOverTicks > GAME_OVER_DURATION) {
+        if (ticks % 5 == 0)    Ball_add(false)
+        if (ticks % 256 == 50) Ball_add(true)
+    }
+
+    ticks++
+    if (gameOverTicks >= 0) {
+        if (gameOverTicks == GAME_OVER_DURATION) startTitle()
+        gameOverTicks++
+        if (lastBall != null) lastBall.draw()
+    }
+    
+    messageField.draw()
+    scoreField.draw()
+}
+
+def drawBlastCircle() {
+    offset.x = 0
+    offset.y = BALL_BLAST_RADIUS
+    rotation(offset, cast(double)ticks * 0.05)
+    for (var i:int = 0; i < 16; i++) {
+        drawBox(mousePos.x + offset.x, mousePos.y + offset.y, 7, 0xee0000,
+                13, 200, 100, 100)
+        rotation(offset, PI * 2 / 16)
+    }
+}
+
+def startTitle() {
+    ticks = 0
+    lastBall = null
+    gameOverTicks = GAME_OVER_DURATION
+    messageField.y = SCREEN_HEIGHT / 3
+    strcpy(cast(Ptr[byte])messageField.text, "BallBlast")
+}
+
+def startGame() {
+    blastAllBalls()
+    lastBall = null
+    score = 0
+    string_i(cast(Ptr[byte])scoreField.text, score)
+    ticks = 0
+    gameOverTicks = -1
+    strcpy(cast(Ptr[byte])messageField.text, "")
+}
+
+def startGameOver() {
+    blastAllBalls()
+    if (gameOverTicks >= 0) return;
+    gameOverTicks = 0
+    messageField.y = SCREEN_HEIGHT / 2
+    strcpy(cast(Ptr[byte])messageField.text, "GAME OVER")
+}
+
+// Balls.
+val BALL_BLAST_RADIUS:double = 64.0
+var balls:Array[Ptr[Ball],100]
+val ballsLength = 100
+
+type Ball = class {
+    GRAVITY_FORCE:double
+    MAX_VELOCITY_CHANGE:double
+    pos:Ptr[Vector3D] 
+    vel:Ptr[Vector3D]
+    radius:double
+    angle:double
+    angleVel:double
+    isInAppearance:Boolean
+    isRed:Boolean
+    visible:Boolean
+    def this() {
+    	this.GRAVITY_FORCE = 0.5
+    	this.MAX_VELOCITY_CHANGE = 0.5
+        this.pos = new Vector3D()
+        this.vel = new Vector3D()
+        this.visible = false
+    }
+    static add(isRed:Boolean) {
+        for(var i:int = 0; i < ballsLength; i++) {
+            val b:Ptr[Ball] = balls[i]
+            if(!b.visible) {
+                b.init(isRed)
+                b.visible = true
+                return
+            }
+        }
+    }
+    def init(isRed:Boolean) {
+        if (!isRed) {
+            radius = 20.0 + random() * 20.0
+            pos.x = (random() * 2.0 - 1.0) * (Field_size.x - radius * 1.1)
+            pos.y = Field_size.y + radius * 1.1
+            isInAppearance = true
+        } else {
+            radius = 20.0
+            pos.x = 0.0; pos.y = -Field_size.y * 0.8
+            isInAppearance = false
+        }
+        vel.x = 0.0
+        vel.y = 0.0
+        angle = random() * PI * 2.0
+        angleVel = (random() * 2 - 1) * 0.1
+        this.isRed = isRed
+        this.visible = true
+    }
+
+    def update() {
+        if (isInAppearance) {
+            vel.y -= GRAVITY_FORCE * 2.0
+            if (pos.y < (Field_size.y - radius)) {
+            	isInAppearance = false
+            }
+        } else {
+            if (pos.y > (Field_size.y - radius)) {
+            	hit(pos.y - (Field_size.y - radius), 0.0)
+            }
+            vel.y += GRAVITY_FORCE
+        }
+        vel.scaleBy(0.95)
+        pos.incrementBy(vel)
+        if (pos.y < -Field_size.y + radius) {
+            if (gameOverTicks < 0) lastBall = this
+
+            startGameOver()
+            return
+        }
+        if (pos.x > Field_size.x - radius) {
+        	hit(pos.x - (Field_size.x - radius), PI / 2.0)
+        }
+        if (pos.x < -Field_size.x + radius) {
+        	hit(-Field_size.y + radius - pos.x, PI / 2.0 * 3.0)
+        }
+        for(var i:int = 0; i < ballsLength; i++) {
+            val b = balls[i]
+            if (b != this && b.visible) {
+	            val d:double = radius + b.radius - distance(pos, b.pos)
+    	        if (d > 0) {
+    	        	hit(d, atan2(b.pos.x - pos.x, b.pos.y - pos.y))
+    	        }
+    	    }
+        }
+        angle += angleVel
+        angleVel *= 0.95
+    }
+
+    def draw() {
+        offset.x = 0
+        offset.y = radius / 2
+        rotation(offset, angle)
+        var color:int
+        var r:int
+        var g:int
+        var b:int
+        if (!isRed) {
+            color = 0xeeeeee; r = 200; g = 200; b = 200
+        } else {
+            color = 0xff0000; r = 250; g = 200; b = 200
+        }
+        for (var i:int = 0; i < 3; i++) {
+            drawBox(pos.x + offset.x, pos.y + offset.y, cast(int)radius, color, cast(int)radius, r, g, b)
+            rotation(offset, PI * 2 / 3)
+        }
+    }
+
+    def hit(d:double, a:double) {
+        if (isInAppearance) return;
+        var sv:double = sin(a) * d
+        var cv:double = cos(a) * d
+        pos.x -= sv / 2.0; pos.y -= cv / 2.0
+        angleVel += (-sv * 0.1 - angleVel) * 0.1
+        sv *= 0.1 * vel.x; cv *= 0.1 * vel.y
+        if (sv > MAX_VELOCITY_CHANGE) sv = MAX_VELOCITY_CHANGE
+        if (sv < -MAX_VELOCITY_CHANGE) sv = -MAX_VELOCITY_CHANGE
+        if (cv > MAX_VELOCITY_CHANGE) cv = MAX_VELOCITY_CHANGE
+        if (cv < -MAX_VELOCITY_CHANGE) cv = -MAX_VELOCITY_CHANGE
+        vel.x -= sv; vel.y -= cv
+    }
+}
+
+def blastBalls(p:Ptr[Vector3D]) {
+    var bc:int = 0
+    for (var i:int = 0; i < ballsLength; i++) {
+        val b = balls[i]
+        if(b.visible) {
+            if (distance(b.pos, p) < BALL_BLAST_RADIUS + b.radius) {
+                if (b.isRed) {
+                    lastBall = b
+
+                    startGameOver()
+                    return
+                }
+                bc++
+            }
+        }
+    }
+    score += bc
+    string_i(cast(Ptr[byte])scoreField.text, score)
+    for (var i:int = 0; i < ballsLength; i++) {
+        val b = balls[i]
+        if(b.visible) {
+            if (distance(b.pos, p) < BALL_BLAST_RADIUS + b.radius) {
+                addSparks(10, b.pos, 20.0, 20.0, 250, 250, 250)
+                b.visible = false
+            }
+        }
+    }
+}
+
+def blastAllBalls() {
+    for (var i = 0; i < ballsLength; i++) {
+        val b = balls[i]
+        if(b.visible) {
+            addSparks(5, b.pos, 20.0, 20.0, 250, 0, 0)
+            b.visible = false
+        }
+    }
+}
+
+// Sparks.
+var sparks:Array[Ptr[Spark],100]
+val sparksLength = 100
+
+type Spark = class {
+    pos:Ptr[Vector3D]
+    vel:Ptr[Vector3D]
+    size:double
+    r:int
+    g:int
+    b:int
+    ticks:int
+	visible:Boolean
+	
+    def this() {
+        pos = new Vector3D
+        vel = new Vector3D    
+    }
+    
+    def update():Boolean = {
+
+        pos.incrementBy(vel)
+        vel.y += 0.5
+        vel.scaleBy(0.99)
+        size *= 0.95
+        r = cast(int)((cast(double)r) * 0.98)
+        g = cast(int)((cast(double)g) * 0.98)
+        b = cast(int)((cast(double)b) * 0.98)
+        
+        if (pos.x < -Field_size.x && vel.x < 0.0 ||
+            pos.x >  Field_size.x && vel.x > 0.0) vel.x *= -1
+        if (pos.y < -Field_size.y && vel.y < 0.0 ||
+            pos.y >  Field_size.y && vel.y > 0.0) vel.y *= -1
+        var cr:double = random()
+        drawBox(pos.x, pos.y, cast(int)size, r * 0x10000 + g * 0x100 + b, cast(int)size, r * cr, g * cr, b * cr)
+        ticks--
+		cast(Boolean)(ticks >= 0)
+    }
+}
+
+def addSparks(count:int, p:Ptr[Vector3D], speed:double, size:double, r:int, g:int ,b:int) {
+    for(var i:int = 0; i < sparksLength; i++) {
+        val s = sparks[i]
+        if(!s.visible) {
+        	s.visible = true
+            s.pos.x = p.x; s.pos.y = p.y
+            val a:double = random() * PI * 2
+            val sp:double = speed * (0.5 + random())
+            s.vel.x = sin(a) * sp; s.vel.y = cos(a) * sp
+            s.size = size
+            s.r = r; s.g = g; s.b = b
+            s.ticks = 15 + cast(int)(15.0 * random())
+            count--
+            if(count <= 0) return
+        }
+    }
+}
+
+def updateSparks() {
+    for (var i:int = 0; i < sparksLength; i++) {
+        if(sparks[i].visible) {
+            if (!sparks[i].update()) {
+                sparks[i].visible = false
+            }
+        }
+    }
+}
+
+var Field_size:Ptr[Vector3D]
+    
+// Game field.
+type Field = class {
+    
+    static initialize() {
+    	Field_size = new Vector3D
+        Field_size.x = (cast(double)SCREEN_WIDTH) * 0.9 / 2.0
+        Field_size.y = (cast(double)SCREEN_HEIGHT) * 0.9 / 2.0
+    }
+
+    static contains(p:Ptr[Vector3D]):Boolean = {
+    	cast(Boolean)(p.x >= -Field_size.x && p.x <= Field_size.x
+    		&& p.y >= -Field_size.y && p.y <= Field_size.y)
+    }
+}
+
+// Blur effect.
+val BLUR_MAX_COUNT:int = 512
+val BLUR_HISTORY_COUNT:int = 6
+var blurs:Array[Ptr[Blur],3072]
+var blurCounts:Array[int,6]
+var blurIndex:int
+
+type Blur = class {
+    pos:Ptr[Vector3D]
+    width:double
+    height:double
+    r:int
+    g:int
+    b:int
+
+    def this() {
+        this.pos = new Vector3D
+    }
+
+    def update() {
+        rect.x = cast(int)(pos.x - width/2 )
+        rect.y = cast(int)(pos.y - height/2 )
+        rect.width = cast(int)width
+        rect.height = cast(int)height
+        fillRect(rect, r * 0x10000 + g * 0x100 + b)
+        width = 1.2 * width; height = 1.2 * height
+        var a = cast(double)(r + g + b) / 3.0
+        r += cast(int)((a - r) * 0.25)
+        g += cast(int)((a - g) * 0.25)
+        b += cast(int)((a - b) * 0.25)
+        r = cast(int)(0.65 * cast(double)r)
+        g = cast(int)(0.65 * cast(double)g)
+        b = cast(int)(0.65 * cast(double)b)
+    }
+}
+
+def drawBox(x:double, y:double, size:int, color:int,
+                 bsize:int, br:int, bg:int, bb:int) {
+    rect.x = cast(int)(x - size / 2.0 + SCREEN_WIDTH / 2.0)
+    rect.y = cast(int)(y - size / 2.0 + SCREEN_HEIGHT / 2.0)
+    rect.width = rect.height = size
+    fillRect(rect, color)
+    addBlur(x, y, cast(double)bsize, cast(double)bsize, br, bg, bb)
+}
+
+def addBlur(x:double, y:double, w:double, h:double,
+                 r:int, g:int, b:int) {
+    if (blurCounts[blurIndex] >= BLUR_MAX_COUNT) return;
+    var bl:Ptr[Blur] = blurs[blurIndex * 512 + blurCounts[blurIndex]]
+    bl.pos.x = x + SCREEN_WIDTH / 2
+    bl.pos.y = y + SCREEN_HEIGHT / 2
+    bl.width = w
+    bl.height = h
+    bl.r = r
+    bl.g = g
+    bl.b = b
+    blurCounts[blurIndex]++
+}
+
+def updateBlurs() {
+    var bi:int = cast(int)(blurIndex + 1)
+    for (var i:int = 0; i < BLUR_HISTORY_COUNT; i++) {
+        if (bi >= BLUR_HISTORY_COUNT) bi = 0
+        for (var j:int = 0; j < blurCounts[bi]; j++) blurs[bi * 512 + j].update()
+        bi++
+    }
+    blurIndex++
+    if (blurIndex >= BLUR_HISTORY_COUNT) blurIndex = 0
+    blurCounts[blurIndex] = 0
+}
+
+def initializeBlurs() {
+    for (var i:int = 0; i < BLUR_HISTORY_COUNT; i++) {
+        for (var j:int = 0; j < BLUR_MAX_COUNT; j++) {
+            blurs[i*512 + j] = new Blur()
+        }
+        blurCounts[i] = 0
+    }
+    blurIndex = 0
+}
+
+// Utility functions.
+def rotation(v:Ptr[Vector3D], a:double) {
+    var sv:double = sin(a)
+    var cv:double = cos(a)
+    var rx:double = cv * v.x - sv * v.y
+    v.y = sv * v.x + cv * v.y
+    v.x = rx
+}
+
+def normalizeAngle(v:double):double = {
+    if (v > PI)       v - PI * 2
+    else if (v < -PI) v + PI * 2
+    else              v
+}
+
+def distance(v1:Ptr[Vector3D],v2:Ptr[Vector3D]):double = {
+    val x = v1.x - v2.x
+    val y = v1.y - v2.y
+    sqrt(x * x + y * y) 
+}
+
+def createTextField(x:int, y:int, width:int, size:int, color:int, align:int):Ptr[TextField] = {
+    var fi:Ptr[TextField] = new TextField()
+    fi.color = color
+    fi.align = align
+    fi.x = cast(double)x
+    fi.y = cast(double)y
+    fi.width = width
+    fi.size = size
+    fi
+}
+
+def exit(a:int):void
+
+
+val PI = 3.141592
+
+val false:int = 0
+val true:int = 1
+
+val GLUT_RGBA:int = 0
+val GLUT_NUMBER:int = 2
+val GLUT_DEPTH:int = 16
+val GLUT_KEY_LEFT:byte = 100
+val GLUT_KEY_UP:byte = 101
+val GLUT_KEY_RIGHT:byte = 102
+val GLUT_KEY_DOWN:byte = 103
+val GLUT_KEY_SPACE:byte = 32
+
+val GLUT_LEFT_BUTTON:int = 0
+val GLUT_MIDDLE_BUTTON:int = 1
+val GLUT_RIGHT_BUTTON:int = 2
+
+val GLUT_DOWN:int = 0
+val GLUT_UP:int = 1
+
+
+val GL_COLOR_BUFFER_BIT:int = 16384
+val GL_QUADS:int = 7
+val GL_LINE_LOOP:int = 2
+val GL_POLYGON:int = 9
+
+val GL_PROJECTION:int = 0x1701
+val GL_DEPTH_BUFFER_BIT:int = 0x00000100
+val GL_MODELVIEW:int = 0x1700
+val GL_DEPTH_TEST:int = 0x0B71
+val GL_BLEND:int = 0x0BE2
+val GL_SRC_ALPHA:int = 0x0302
+val GL_ONE_MINUS_SRC_ALPHA:int = 0x0303
+val GL_ONE:int = 1
+val GL_LIGHT0:int = 0x4000
+val GL_LIGHTING:int = 0x0B50
+val GL_POSITION:int = 0x1203
+val GL_DIFFUSE:int = 0x1201
+val GL_FRONT_AND_BACK:int = 0x0408
+
+val fullscreen:int = 0
+
+var randomValue:int = 1143241
+
+var WIDTH:int = 480
+var HEIGHT:int = 480
+
+def glInit(argc:int, argv:Ptr[Ptr[char]]) {
+  	glutInit(&argc, argv)
+  	glutInitWindowSize(WIDTH, HEIGHT)
+	glutCreateWindow(argv[0])
+  	glutInitDisplayMode(GLUT_RGBA)
+  	glEnable(GL_LIGHTING)
+  	glEnable(GL_LIGHT0)
+  
+  	glutDisplayFunc(main_display)
+  	glutTimerFunc(20, main_loop, 0)
+
+}
+
+def main_loop(a:int) {
+	glutPostRedisplay()
+	glutTimerFunc(20 , main_loop , 0)
+}
+
+def color(r:float,g:float,b:float,a:float) {
+	var col = Array(r,g,b,a)
+	glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, col)
+}
+
+def fillRect(rect:Ptr[Rectangle], c:int) {
+	glPushMatrix()
+	glBegin(GL_POLYGON)
+		color(cast(float)((c >> 16) & 0xff) / 255.0, cast(float)((c >> 8) & 0xff) / 255.0, cast(float)(c & 0xff) / 255.0, 1.0)
+		glVertex3d(cast(double)rect.x,cast(double)rect.y,0.0)
+		glVertex3d(cast(double)rect.x+rect.width,cast(double)rect.y,0.0)
+		glVertex3d(cast(double)rect.x+rect.width,cast(double)rect.y+rect.height,0.0)
+		glVertex3d(cast(double)rect.x,cast(double)rect.y+rect.height,0.0)
+	glEnd()
+	glPopMatrix()
+}
+def random():double = {
+	randomValue = randomValue * 143242143 + 432414321
+	val a:double = cast(double)0x7fffffff
+	randomValue = randomValue & 0x7fffffff
+	val b:double = cast(double)randomValue
+	(b / a)
+}
+
+def main_display() {
+  
+  	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+  	glViewport(0, 0, WIDTH, HEIGHT)
+
+  	glMatrixMode(GL_PROJECTION)
+  	glLoadIdentity()
+	
+    glOrtho(0.0, cast(double)WIDTH, cast(double)HEIGHT, 0.0, -1.0, 1.0)
+  	glMatrixMode(GL_MODELVIEW)
+
+  	glLoadIdentity()
+  	update()
+  	glFlush()
+}
+
+def drawString(str:Ptr[byte], color:int, x:int, y:int, size:int, width:int, align:int) {
+
+	glPushMatrix()
+	val len = strlen(str)
+
+	align is {
+		TEXT_ALIGN_CENTER?
+			glTranslated(cast(double)(width-size*len)/2.0, 0.0, 0.0)
+			break
+		TEXT_ALIGN_RIGHT?
+			glTranslated(cast(double)(width-size*len), 0.0, 0.0)
+			break
+			
+	}
+	glTranslated(cast(double)x, cast(double)y, 0.0)
+
+	while(str[0] != 0) {
+		glPushMatrix()
+		glScaled(cast(double)size / 6.0, cast(double)size / 6.0, 1.0)
+		drawChar(str[0], color)
+		glPopMatrix()
+		str++
+		glTranslated(cast(double)size, 0.0, 0.0)
+	}
+	glPopMatrix()
+}
+
+def drawChar(k:byte, color:int) {
+
+	var arr:Ptr[long]
+	k is {
+		48 ? var a = Array(28,34,38,42,50,34,28,0); arr = a; break
+		49 ? var a =Array(8,24,8,8,8,8,28,0); arr = a;  break
+		50 ? var a =Array(28,34,2,12,16,32,62,0); arr = a;  break
+		51 ? var a =Array(28,34,2,12,2,34,28,0); arr = a;  break
+		52 ? var a =Array(4,12,20,36,62,4,4,0); arr = a; break
+		53 ? var a =Array(62,32,60,34,2,34,28,0); arr = a; break
+		54 ? var a =Array(28,34,32,60,34,34,28,0); arr = a; break
+		55 ? var a =Array(62,2,4,8,8,16,16,0); arr = a; break
+		56 ? var a =Array(28,34,34,28,34,34,28,0); arr = a; break
+		57 ? var a =Array(28,34,34,30,2,34,28,0); arr = a; break
+		65 ? var a =Array(8,8,20,20,28,34,34,0); arr = a; break
+		66 ? var a =Array(60,34,34,60,34,34,60,0); arr = a; break
+		67 ? var a =Array(12,18,32,32,32,18,12,0); arr = a; break
+		68 ? var a =Array(56,36,34,34,34,36,56,0); arr = a; break
+		69 ? var a =Array(62,32,32,60,32,32,62,0); arr = a; break
+		70 ? var a =Array(62,32,32,60,32,32,32,0); arr = a; break
+		71 ? var a =Array(12,18,32,38,34,18,12,0); arr = a; break
+		72 ? var a =Array(34,34,34,62,34,34,34,0); arr = a; break
+		73 ? var a =Array(28,8,8,8,8,8,28,0); arr = a; break
+		74 ? var a =Array(2,2,2,2,2,34,28,0); arr = a; break
+		75 ? var a =Array(34,36,40,48,40,36,34,0); arr = a; break
+		76 ? var a =Array(32,32,32,32,32,32,62,0); arr = a; break
+		77 ? var a =Array(34,34,54,42,42,34,34,0); arr = a; break
+		78 ? var a =Array(34,34,50,42,38,34,34,0); arr = a; break
+		79 ? var a =Array(28,34,34,34,34,34,28,0); arr = a; break
+		80 ? var a =Array(60,34,34,60,32,32,32,0); arr = a; break
+		81 ? var a =Array(28,34,34,34,42,36,26,0); arr = a; break
+		82 ? var a =Array(60,34,34,60,40,36,34,0); arr = a; break
+		83 ? var a =Array(28,34,32,28,2,34,28,0); arr = a; break
+		84 ? var a =Array(62,8,8,8,8,8,8,0); arr = a; break
+		85 ? var a =Array(34,34,34,34,34,34,28,0); arr = a; break
+		86 ? var a =Array(34,34,20,20,20,8,8,0); arr = a; break
+		87 ? var a =Array(42,42,42,42,20,20,20,0); arr = a; break
+		88 ? var a =Array(34,20,20,8,20,20,34,0); arr = a; break
+		89 ? var a =Array(34,20,20,8,8,8,8,0); arr = a; break
+		90 ? var a =Array(62,2,4,8,16,32,62,0); arr = a; break
+		97 ? var a =Array(0,0,12,2,14,18,14,0); arr = a; break
+		98 ? var a =Array(16,16,28,18,18,18,28,0); arr = a; break
+		99 ? var a =Array(0,0,12,18,16,18,12,0); arr = a; break
+		100 ? var a =Array(2,2,14,18,18,18,14,0); arr = a; break
+		101 ? var a =Array(0,0,12,18,30,16,12,0); arr = a; break
+		102 ? var a =Array(6,8,28,8,8,8,8,0); arr = a; break
+		103 ? var a =Array(0,0,14,18,14,2,12,0); arr = a; break
+		104 ? var a =Array(16,16,28,18,18,18,18,0); arr = a; break
+		105 ? var a =Array(8,0,8,8,8,8,8,0); arr = a; break
+		106 ? var a =Array(4,0,4,4,4,4,24,0); arr = a; break
+		107 ? var a =Array(16,16,18,20,24,20,18,0); arr = a; break
+		108 ? var a =Array(24,8,8,8,8,8,8,0); arr = a; break
+		109 ? var a =Array(0,0,60,42,42,42,42,0); arr = a; break
+		110 ? var a =Array(0,0,28,18,18,18,18,0); arr = a; break
+		111 ? var a =Array(0,0,12,18,18,18,12,0); arr = a; break
+		112 ? var a =Array(0,0,28,18,28,16,16,0); arr = a; break
+		113 ? var a =Array(0,0,14,18,14,2,2,0); arr = a; break
+		114 ? var a =Array(0,0,22,24,16,16,16,0); arr = a; break
+		115 ? var a =Array(0,0,14,16,12,2,28,0); arr = a; break
+		116 ? var a =Array(0,8,30,8,8,8,6,0); arr = a; break
+		117 ? var a =Array(0,0,18,18,18,18,14,0); arr = a; break
+		118 ? var a =Array(0,0,18,18,18,20,8,0); arr = a; break
+		119 ? var a =Array(0,0,42,42,42,20,20,0); arr = a; break
+		120 ? var a =Array(0,0,18,18,12,18,18,0); arr = a; break
+		121 ? var a =Array(0,0,18,18,10,4,24,0); arr = a; break
+		122 ? var a =Array(0,0,30,2,4,8,30,0); arr = a; break
+		
+		_ ? return
+	}
+	
+	for(var i = 0; i < 8; i++) {
+		var a = arr[i]
+		for(var j = 0; j < 6; j++) {
+			if (a & 1 != 0) {
+				rect.x = 6-j
+				rect.y = i
+				rect.width = 1
+				rect.height = 1
+				fillRect(rect, color)
+			}
+			a = a >> 1
+		}
+	}
+}
+
+

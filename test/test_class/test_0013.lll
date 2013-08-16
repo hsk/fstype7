@@ -1,0 +1,16 @@
+///>name class infer this
+/*** result
+(0,5
+,)
+result ***/
+type ABC = class {
+	aa:int
+	def a():int = {
+		return aa
+	}
+}
+def main() {
+	val a = new ABC()
+	a.aa = 5
+	print_i(a.a())
+}

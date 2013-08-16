@@ -1,0 +1,7 @@
+///>name error 1006
+/*** result
+(1006,7)
+result ***/
+
+
+f(}

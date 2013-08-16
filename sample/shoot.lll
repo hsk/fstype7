@@ -50,6 +50,8 @@ var bullets:Array[Ptr[Bullet],50]
 val bulletsCnt:int = 50
 var particles:Array[Ptr[Particle], 50]
 val particlesCnt:int = 50
+var clouds:Array[Ptr[Cloud], 50]
+val cloudsCnt:int = 50
 var shots:Array[Ptr[Shot],10]
 val shotsCnt:int = 10
 var score:int = 0
@@ -60,7 +62,7 @@ var key:Ptr[Key]
 def main(argc:int, argv:Ptr[Ptr[char]]) {
 
 	key = new Key()
-	ship = new Ship(50.0, 0.0)
+	ship = new Ship(232.5, 450.0)
 	ship.init()
 	
 	gameover = new GameOver
@@ -76,6 +78,10 @@ def main(argc:int, argv:Ptr[Ptr[char]]) {
 
 	for(i = 0; i < particlesCnt;i++) {
 		particles[i] = new Particle()
+	}
+
+	for(i = 0; i < cloudsCnt;i++) {
+		clouds[i] = new Cloud()
 	}
 
 	for(i = 0; i < shotsCnt;i++) {
@@ -133,7 +139,7 @@ def onEnter() {
 		}
 	}
 
-	if(cnt == 0 || random() * 100 < rank) {
+	if(cnt == 0 || random() * 100 < (rank+1) * (ship.s*0.2+0.5)) {
 		var rn1 = random() * 3
 		var rnd = cast(int)(rn1)
 		rnd is {
@@ -184,19 +190,23 @@ def onEnter() {
 		var p = particles[i]
 		if(p.visible) p.move()
 	}
+	for (i = 0; i < cloudsCnt; i++) {
+		var p = clouds[i]
+		if(p.visible) p.move()
+	}
+	
+	if((ship.s*30.0+1.0)*random() > 0.6) addCloud()
 	// txt.text = "SCORE "+score;
 }
-
-def glFrustum(a:double,b:double,c:double,d:double,e:double,f:double):void
 
 def color(r:float,g:float,b:float,a:float) {
 	var col = Array(r,g,b,a)
 	glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, col)
 }
+var WIDTH:int = 640
+var HEIGHT:int = 480
 
 def main_display() {
-  	var WIDTH:int = 640
-  	var HEIGHT:int = 480
   	var _farPlane = 1000.0
   	var _nearPlane = 0.1
   
@@ -230,6 +240,9 @@ def main_display() {
 
   	glLoadIdentity()
   	glBlendFunc(GL_SRC_ALPHA, GL_ONE)
+  	
+	glTranslated((random()*4-2)*ship.s*0.2, (random()*8-4)*ship.s*0.4, 0.0)
+
  
 	for (var i = 0; i < enemiesCnt; i++) {
 		var enemy = enemies[i]
@@ -259,6 +272,11 @@ def main_display() {
 
 	for (i = 0; i < particlesCnt; i++) {
 		var p = particles[i]
+		if (p.visible) p.draw()
+	}
+
+	for (i = 0; i < cloudsCnt; i++) {
+		var p = clouds[i]
 		if (p.visible) p.draw()
 	}
    
@@ -317,6 +335,16 @@ def addEnemy(x:double, y:double, rad:double) {
 	}
 }
 
+def addCloud() {
+	for (var i:int = 0; i < cloudsCnt; i++) {
+		val b = clouds[i]
+		if(!b.visible) {
+			b.init()
+			return
+		}
+	}
+}
+
 def normalRad(v:double):double = {
 	v + 2 * PI * (
 		if (v >  PI) -1 else
@@ -333,7 +361,8 @@ type Key = class {
 	space:int
 	shot:int
 	start:int
-
+	speed:int
+	
 	def this() {
 		this.up =
 		this.down =
@@ -341,7 +370,8 @@ type Key = class {
 		this.right =
 		this.space =
 		this.shot =
-		this.start = 0
+		this.start =
+		this.speed = 0
 	}
 
 	def downKey(k:byte) {
@@ -351,6 +381,7 @@ type Key = class {
 			GLUT_KEY_LEFT? this.left = 1 break
 			GLUT_KEY_RIGHT? this.right = 1 break
 			GLUT_KEY_SPACE? this.start = this.shot = this.space = 1 break
+			122 ? this.speed = 1 break
 		}
 	}
 	
@@ -361,6 +392,7 @@ type Key = class {
 			GLUT_KEY_LEFT? this.left = 0 break
 			GLUT_KEY_RIGHT? this.right = 0 break
 			GLUT_KEY_SPACE? this.start = this.shot = this.space = 0 break
+			122 ? this.speed = 0 break
 			27? glutLeaveGameMode() exit(0) break
 		}
 	}
@@ -389,7 +421,8 @@ type Ship = class {
 	speed:double
 	exists:bool
 	timer:int
-
+	s:double
+	
 	def this(x:double, y:double) {
 		this.speed = 7.0
 		this.x = x
@@ -406,7 +439,9 @@ type Ship = class {
 	  	this.timer++
 	  
 		if(this.timer > 300) this.exists = true
-		
+		if(key.speed) this.s += 0.05 else this.s -= 0.2
+		if(this.s > 20.0) this.s = 20.0 else if(this.s < 0.0) this.s = 0.0
+				
 		var x = 0.0
 		var y = 0.0
 		
@@ -420,8 +455,8 @@ type Ship = class {
 			x /= 1.4142
 			y /= 1.4142
 		}
-		this.x += x
-		this.y += y
+		this.x += x  + random() * 2 - 1
+		this.y += y + random() * 2 - 1
 		
 		if(this.x < 0) this.x = 5 else if(this.x > 465) this.x = 465 - 5
 		if(this.y < 0) this.y = 5 else if(this.y > 465) this.y = 465 - 5
@@ -462,9 +497,9 @@ type Enemy = class {
 	r2:double
 
 	def this() {
-		this.speed = 5
+		this.speed = 3 + random() * 5.0
 		this.rad = 0
-		this.r = 0.05
+		this.r = 0.02 + random() / 10.0
 		this.r2 = 0
 		this.visible = false
 	}
@@ -503,10 +538,10 @@ type Enemy = class {
 
 		this.rad = normalRad(this.rad)
 		this.x += cos(this.rad) * this.speed
-		this.y += sin(this.rad) * this.speed
+		this.y += sin(this.rad) * this.speed + ship.s
 		
 //		if(this.x < 0) this.x = 5 else if(this.x > 465) this.x = 465 - 5
-//		if(this.y < 0) this.y = 5 else if(this.y > 465) this.y = 465 - 5
+		if(this.y > 1065) this.visible = false
 
 		rad2
 	}
@@ -539,12 +574,14 @@ type Enemy = class {
 	static move2(this:Ptr[Enemy]) {
 		val r:double = this.moveBody()
 		val rr:int = cast(int)(random() * 5.0 + 1.0)
-		addBulletN(this.x, this.y, r + this.r2, rr, 0.1)
+		addBulletN(this.x, this.y, r + this.r2, rr, 0.3)
 
 		this.r2 += cast(double)rr * 0.1
 
 		if (random() < 0.03) {
 			this.wait(60, Enemy_move1)
+		} else {
+			this.wait(20, Enemy_move2)
 		}
 	}
 
@@ -584,7 +621,7 @@ type Particle = class {
 	def move():bool = {
 
 		this.x += cos(this.rad) * this.speed
-		this.y += sin(this.rad) * this.speed
+		this.y += sin(this.rad) * this.speed + 30.0  + ship.s
 
 		this.size -= 1.5
 		
@@ -613,16 +650,70 @@ type Particle = class {
 
 }
 
+
+type Cloud = class {
+
+	x:double
+	y:double
+	visible:bool
+	speed:double
+	size:double
+	rot:double
+	def this() {
+		this.visible = false
+	}
+
+	def init() {
+		this.rot = random() * 360.0
+		this.x = random() * cast(double)WIDTH
+		this.visible = true
+		this.speed = random() * 0 + 15
+		this.size = random() * 100 + 50
+		this.y = -(this.size)
+	}
+
+	def move():bool = {
+
+		this.y += this.speed  + ship.s
+
+		this.size -= 0.05
+		
+		if (465.0 + this.size < this.y)
+			this.visible = false
+
+		this.visible
+	}
+
+	def draw() {
+		glPushMatrix()
+		glTranslated(this.x, this.y, 0.0)
+		glRotated(this.rot,0.0,0.0,1.0)
+		
+		val x = this.size
+		val y = this.size + 30.0
+		glBegin(GL_POLYGON)
+			color(0.05, 0.2, 0.15, 0.5)
+			glNormal3d(0.0,0.0,1.0)
+			glVertex3d(-x,y,0.0)
+			glVertex3d(x,y,0.0)
+			glVertex3d(x,-y,0.0)
+			glVertex3d(-x,-y,0.0)
+		glEnd()
+		glPopMatrix() 
+	}
+
+}
+
 type Bullet = class {
 	x:double
 	y:double
 	visible:bool
 	speed:double
 	rad:double
-
+	rot:double
 	def this() {
 		this.visible = false
-		this.speed = 10
+		this.speed = 5
 	}
 
 	def init(x:double, y:double, rad:double) {
@@ -630,16 +721,17 @@ type Bullet = class {
 		this.y = y
 		this.rad = rad
 		this.visible = true
+		this.rot = 0.0
 	}
 
 	def draw() {
 		glPushMatrix()
 		glTranslated(this.x, this.y, 0.0)
-
-		val x = 5.0
-		val y = 5.0
+		glRotated(this.rot,0.0,0.0,1.0)
+		val x = 10.0
+		val y = 10.0
 		glBegin(GL_POLYGON)
-			color(0.0, 1.0,0.5,1.0)
+			color(0.9, 0.2,0.9,1.0)
 			glNormal3d(0.0,0.0,1.0)
 			glVertex3d(-x,y,0.0)
 			glVertex3d(x,y,0.0)
@@ -651,9 +743,10 @@ type Bullet = class {
 
 	def move():bool = {
 		this.x += cos(this.rad) * this.speed
-		this.y += sin(this.rad) * this.speed
+		this.y += sin(this.rad) * this.speed  + ship.s
 		if(this.x < 0 || 465 < this.x || this.y < 0 || 465 < this.y)
 			this.visible = false
+		this.rot += 10.0
 		this.visible
 	}
 }
@@ -696,10 +789,81 @@ type Shot = class {
 
 	def move():bool = {
 		this.x += cos(this.rad) * this.speed
-		this.y += sin(this.rad) * this.speed
+		this.y += sin(this.rad) * this.speed  + ship.s
 		if (this.x < 0 || 465 < this.x || this.y < 0 || 465 < this.y)
 			this.visible = false
 		this.visible
 	}
 
 }
+/*
+def drawChar(k:byte) {
+	var arr:Ptr[long]
+	k is {
+		48 ? arr = Array(28,34,38,42,50,34,28,0) break
+		49 ? arr = Array(8,24,8,8,8,8,28,0) break
+		50 ? arr = Array(28,34,2,12,16,32,62,0) break
+		51 ? arr = Array(28,34,2,12,2,34,28,0) break
+		52 ? arr = Array(4,12,20,36,62,4,4,0) break
+		53 ? arr = Array(62,32,60,34,2,34,28,0) break
+		54 ? arr = Array(28,34,32,60,34,34,28,0) break
+		55 ? arr = Array(62,2,4,8,8,16,16,0) break
+		56 ? arr = Array(28,34,34,28,34,34,28,0) break
+		57 ? arr = Array(28,34,34,30,2,34,28,0) break
+		65 ? arr = Array(8,8,20,20,28,34,34,0) break
+		66 ? arr = Array(60,34,34,60,34,34,60,0) break
+		67 ? arr = Array(12,18,32,32,32,18,12,0) break
+		68 ? arr = Array(56,36,34,34,34,36,56,0) break
+		69 ? arr = Array(62,32,32,60,32,32,62,0) break
+		70 ? arr = Array(62,32,32,60,32,32,32,0) break
+		71 ? arr = Array(12,18,32,38,34,18,12,0) break
+		72 ? arr = Array(34,34,34,62,34,34,34,0) break
+		73 ? arr = Array(28,8,8,8,8,8,28,0) break
+		74 ? arr = Array(2,2,2,2,2,34,28,0) break
+		75 ? arr = Array(34,36,40,48,40,36,34,0) break
+		76 ? arr = Array(32,32,32,32,32,32,62,0) break
+		77 ? arr = Array(34,34,54,42,42,34,34,0) break
+		78 ? arr = Array(34,34,50,42,38,34,34,0) break
+		79 ? arr = Array(28,34,34,34,34,34,28,0) break
+		80 ? arr = Array(60,34,34,60,32,32,32,0) break
+		81 ? arr = Array(28,34,34,34,42,36,26,0) break
+		82 ? arr = Array(60,34,34,60,40,36,34,0) break
+		83 ? arr = Array(28,34,32,28,2,34,28,0) break
+		84 ? arr = Array(62,8,8,8,8,8,8,0) break
+		85 ? arr = Array(34,34,34,34,34,34,28,0) break
+		86 ? arr = Array(34,34,20,20,20,8,8,0) break
+		87 ? arr = Array(42,42,42,42,20,20,20,0) break
+		88 ? arr = Array(34,20,20,8,20,20,34,0) break
+		89 ? arr = Array(34,20,20,8,8,8,8,0) break
+		90 ? arr = Array(62,2,4,8,16,32,62,0) break
+		97 ? arr = Array(0,0,12,2,14,18,14,0) break
+		98 ? arr = Array(16,16,28,18,18,18,28,0) break
+		99 ? arr = Array(0,0,12,18,16,18,12,0) break
+		100 ? arr = Array(2,2,14,18,18,18,14,0) break
+		101 ? arr = Array(0,0,12,18,30,16,12,0) break
+		102 ? arr = Array(6,8,28,8,8,8,8,0) break
+		103 ? arr = Array(0,0,14,18,14,2,12,0) break
+		104 ? arr = Array(16,16,28,18,18,18,18,0) break
+		105 ? arr = Array(8,0,8,8,8,8,8,0) break
+		106 ? arr = Array(4,0,4,4,4,4,24,0) break
+		107 ? arr = Array(16,16,18,20,24,20,18,0) break
+		108 ? arr = Array(24,8,8,8,8,8,8,0) break
+		109 ? arr = Array(0,0,60,42,42,42,42,0) break
+		110 ? arr = Array(0,0,28,18,18,18,18,0) break
+		111 ? arr = Array(0,0,12,18,18,18,12,0) break
+		112 ? arr = Array(0,0,28,18,28,16,16,0) break
+		113 ? arr = Array(0,0,14,18,14,2,2,0) break
+		114 ? arr = Array(0,0,22,24,16,16,16,0) break
+		115 ? arr = Array(0,0,14,16,12,2,28,0) break
+		116 ? arr = Array(0,8,30,8,8,8,6,0) break
+		117 ? arr = Array(0,0,18,18,18,18,14,0) break
+		118 ? arr = Array(0,0,18,18,18,20,8,0) break
+		119 ? arr = Array(0,0,42,42,42,20,20,0) break
+		120 ? arr = Array(0,0,18,18,12,18,18,0) break
+		121 ? arr = Array(0,0,18,18,10,4,24,0) break
+		122 ? arr = Array(0,0,30,2,4,8,30,0) break
+		_ ? return
+	}
+}
+
+*/

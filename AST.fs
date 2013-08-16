@@ -129,7 +129,6 @@ type T =
     | TCls of (string * T) list
     (** delegate 型 *)
     | TDlg of T * T * T list
-    | TThis
     
 (**
  * 抽象構文木
@@ -491,7 +490,7 @@ type T with
         | TCls of (string * T) list
         (** delegate 型 *)
         | TDlg of T * T * T list
-        | TThis*)
+        *)
     (**
      * 1文字表現で型を文字列化します
      *)
@@ -581,7 +580,6 @@ type T with
             | _ -> ()
             let r = T.structsfind(this)
             r.p
-        | TThis -> id
     (**
      * 配列はポインタに変換して型を文字列として出力します。
      *)

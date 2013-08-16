@@ -1,0 +1,8 @@
+///>name error 2004
+/*** result
+(2004,6)
+result ***/
+
+def a(a()){
+
+}

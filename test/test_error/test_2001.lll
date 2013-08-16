@@ -1,0 +1,7 @@
+///>name error 2001
+/*** result
+(2001,6)
+result ***/
+
+import a/2
+

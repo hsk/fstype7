@@ -1,7 +1,10 @@
-def println(str:Ptr[char]):void
-def print_b(c:char):void
-def print_s(i:short):void
-def print_i(i:int):void
-def print_l(l:long):void
-def print_f(f:float):void
-def print_d(d:double):void
+//def println(str:Ptr[byte]):void
+//def print_b(c:char):void
+//def print_s(i:short):void
+//def print_i(i:int):void
+//def print_l(l:long):void
+//def print_f(f:float):void
+//def print_d(d:double):void
+def string_i(str:Ptr[byte], i:int):void
+def strcpy(dst:Ptr[byte], src:Ptr[byte]):Ptr[byte]
+def strlen(dst:Ptr[byte]):int

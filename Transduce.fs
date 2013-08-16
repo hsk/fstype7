@@ -26,7 +26,7 @@ let mutable globals:E list = []
  *)
 let rec fimport(st: Token): String =
     match st with
-    | Bin(Id(_, a), Id(_, "."), b) -> a + "/" + fimport(b)
+    | Bin(a, Id(_, "."), Id(_, b)) -> fimport(a) + "/" + b
     | Id(_, a) -> a
     | o -> raise(SyntaxError(2001, o.pos, "error syntax error " + o.first.ToString() + " " + o.ToString()))
 
@@ -86,7 +86,7 @@ and members(id:string, st: Token, m: (string * T) list): (string * T) list =
               Bin(Msg(Id(idp, name), (Id(_, "(") as d2), r, (Id(_, ")") as d3)), (Id(_, ":") as d4), typ)),
           (Id(_, "=") as d5),
           b) ->
-        let t1 = TDlg(t(typ), TThis, (List.map (fun (id, t) -> t) (fprms r)))
+        let t1 = TDlg(t(typ), Tn, (List.map (fun (id, t) -> t) (fprms r)))
         let r2 =Bin(Bin(Id(P0,"this"),Id(P0,":"),Pre(Id(P0,"*"),Id(P0, id))), Id(P0,",") , r)
         globals <- f(
             Bin(Pre(d1, Bin(Msg(Id(idp, id+"_"+name), d2, r2, d3), d4, typ)), d5, b)
@@ -102,16 +102,16 @@ and members(id:string, st: Token, m: (string * T) list): (string * T) list =
             globals <- f(
                 Pre(d1, Msg(Msg(Id(idp, id+"_"+name), d2, r2, d3), d4, e, d5))
             )::globals
-            let t1 = TDlg(Tv, TThis, List.map (fun (id, t) -> t) (fprms r))
+            let t1 = TDlg(Tv, Tn, List.map (fun (id, t) -> t) (fprms r))
             (name, t1) :: m
         | _ ->
             globals <- f(
                 Pre(d1, Msg(Msg(Id(idp, id+"_"+name), d2, r2, d3), d4, e, d5))
             )::globals
-            let t1 = TDlg(Tv, TThis, List.map (fun (id, t) -> t) (fprms r))
+            let t1 = TDlg(Tv, Tn, List.map (fun (id, t) -> t) (fprms r))
             (name, t1) :: m
     | Pre(Id(_, "def"), Bin(Msg(Id(_, name), Id(_, "("), r, Id(_, ")")), Id(_, ":"), typ)) ->
-        let t1 = TDlg(t(typ), TThis, List.map (fun (id, t) -> t) (fprms r))
+        let t1 = TDlg(t(typ), Tn, List.map (fun (id, t) -> t) (fprms r))
         (name, t1) :: m
     | Pre(Id(_, "static") as d1,
           Msg(Msg(Id(idp, name), (Id(_, "(") as d2), r, (Id(_, ")") as d3)), (Id(_, "{") as d4), e, (Id(_, "}") as d5))) ->
@@ -120,6 +120,15 @@ and members(id:string, st: Token, m: (string * T) list): (string * T) list =
             Pre(Id(d1.pos, "def"), Msg(Msg(Id(idp, id+"_"+name), d2, r, d3), d4, e, d5))
         )::globals
         let t1 = TFun(Tv, List.map (fun (id, t) -> t) (fprms r))
+        (name, t1) :: m
+    | Bin(Pre((Id(_, "static") as d1),
+              Bin(Msg(Id(idp, name), (Id(_, "(") as d2), r, (Id(_, ")") as d3)), (Id(_, ":") as d4), typ)),
+          (Id(_, "=") as d5),
+          b) ->
+        let t1 = TDlg(t(typ), Tn, (List.map (fun (id, t) -> t) (fprms r)))
+        globals <- f(
+            Bin(Pre(Id(d1.pos, "def"), Bin(Msg(Id(idp, id+"_"+name), d2, r, d3), d4, typ)), d5, b)
+        )::globals
         (name, t1) :: m
 
     | o -> raise(SyntaxError(2003, o.pos, "error syntax error " + o.first.ToString() + " " + o.ToString()))

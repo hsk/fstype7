@@ -10,6 +10,10 @@ def glutMainLoop():void
 def glEnable(mode:int):void
 def glDisable(mode:int):void
 def glutKeyboardFunc(f:(byte, int, int) => void):void
+def glutMouseFunc(func:(int, int, int, int)=>void):void
+def glutPassiveMotionFunc(func:(int, int)=>void):void
+def glutMotionFunc(func:(int, int)=>void):void
+
 def glutSpecialFunc(f:(byte, int, int) => void):void
 def glutSpecialUpFunc(f:(byte, int, int) => void):void
 def glutFullScreen():void
@@ -50,3 +54,5 @@ def glOrtho(
 	bottom:double, top:double,
 	near:double, far:double
 ):void
+
+def glFrustum(a:double,b:double,c:double,d:double,e:double,f:double):void

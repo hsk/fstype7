@@ -1,0 +1,12 @@
+///>> skip
+///>name double 10.0を表示
+/*** result
+(0,9.000000
+,)
+result ***/
+
+var A = 6.00
+def main() {
+	val a = A / 2 * 3
+	print_d(a)
+}

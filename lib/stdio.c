@@ -27,3 +27,8 @@ void print_f(float f) {
 void print_d(double d) {
   printf("%lf\n", d);
 }
+
+
+void string_i(char* p, int i) {
+	sprintf(p, "%d", i);
+}

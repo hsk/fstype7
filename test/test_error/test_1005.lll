@@ -1,0 +1,6 @@
+///>name error 1005
+/*** result
+(1005,6)
+result ***/
+
+if(a}

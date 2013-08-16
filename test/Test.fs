@@ -87,10 +87,10 @@ let test file =
                 else if expected = "("+no.ToString()+","+p.no.ToString()+")" then ()
                 else raise e
             | Compact.SyntaxError(no,p,m) as e ->
-                printfn "syntax error p.no=%d m=%s expected='%s'" p.no m expected
+                printfn "syntax error p.line=%d m=%s expected='%s'" p.line m expected
                 if expected = "(null)" then ()
                 else if expected = "("+no.ToString()+")" then ()
-                else if expected = "("+no.ToString()+","+p.no.ToString()+")" then ()
+                else if expected = "("+no.ToString()+","+p.line.ToString()+")" then ()
                 else raise e
             | e ->
                 printfn "%s" e.StackTrace
